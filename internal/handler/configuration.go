@@ -20,6 +20,7 @@ func Configuration(c echo.Context) error {
 
 	themeOptions := []template.ThemeOption{
 		{Caption: "Default Theme", Value: config.DefaultTheme, Selected: true},
+		{Caption: "None", Value: config.NoneTheme},
 	}
 
 	file, err := os.Open("internal/template/script/base.js")
@@ -57,6 +58,7 @@ func IntroVideoCode(c echo.Context) error {
 
 	theme, err := config.NewTheme(c.FormValue(template.THEME))
 	if err != nil {
+		fmt.Println(err)
 		return generateMessage(c, "There was an issue generating the theme. Please check the theme value and try again.", http.StatusInternalServerError)
 	}
 
@@ -113,11 +115,13 @@ func IntroVideoCode(c echo.Context) error {
 
 	js, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
 	if err != nil {
+		fmt.Println(err)
 		return generateMessage(c, "An error occurred while generating the script. Please try again later.", http.StatusInternalServerError)
 	}
 
 	css, err := internal.Stylesheet{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
 	if err != nil {
+		fmt.Println(err)
 		return generateMessage(c, "An error occurred while generating the stylesheet. Please try again later.", http.StatusInternalServerError)
 	}
 
