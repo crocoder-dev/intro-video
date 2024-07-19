@@ -1,0 +1,48 @@
+{{define "bubble"}}
+
+.iv-bubble {
+
+  position: absolute;
+  top: 30px;
+  left: -40px;
+  width: auto;
+  min-width: 60px;
+  padding: 8px;
+  border: 2px solid #007BFF;
+  border-radius: 10px;
+  border-bottom-right-radius: 2px;
+  text-align: center;
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, .2);
+
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  outline: none;
+  border: 0px;
+
+  border: 2px solid #007BFF;
+  border-radius: 10px;
+  border-bottom-right-radius: 2px;
+}
+
+.iv-bubble:focus {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.iv-bubble.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.iv-bubble:hover {
+  background-color: var(--primary-hover);
+}
+
+{{end}}

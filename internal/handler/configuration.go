@@ -20,6 +20,8 @@ func Configuration(c echo.Context) error {
 
 	themeOptions := []template.ThemeOption{
 		{Caption: "Default Theme", Value: config.DefaultTheme, Selected: true},
+		{Caption: "Shadcn Theme - Light", Value: config.ShadcnThemeLight},
+		{Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
 		{Caption: "None", Value: config.NoneTheme},
 	}
 
