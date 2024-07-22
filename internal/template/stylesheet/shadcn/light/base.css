@@ -1,104 +1,107 @@
 :root {
-    --primary: #f8fafc;
-    --primary-foreground: #0f172a;
-    --primary-hover: #dee1e3;
-    --progress-bar: #007bff;
+  --primary: 240 5.9% 10%;
+  --secondary: 240 4.8% 95.9%;
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --muted: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --input: 240 5.9% 90%;
 }
 
 .iv-card {
-    animation: bounce-fade 0.4s;
-    position: fixed;
-    z-index: 10;
-    right: 16px;
-    bottom: 16px;
-    box-sizing: border-box;
-    transition: all 0.25s ease-in-out;
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
+  animation: bounce-fade 0.4s;
+  position: fixed;
+  z-index: 10;
+  right: 16px;
+  bottom: 16px;
+  box-sizing: border-box;
+  transition: all 0.25s ease-in-out;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .iv-close-button {
-    position: absolute;
-    top: -16px;
-    right: -16px;
-    background: rgba(0, 0, 0, 1);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 42px;
-    cursor: pointer;
-    padding-bottom: 2px;
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  background: rgba(0, 0, 0, 1);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  cursor: pointer;
+  padding-bottom: 2px;
 }
 
 .iv-player {
-    display: none;
-    width: 100%;
-    height: 100%;
-    margin: 0 auto;
-    border-radius: 8px;
-    object-fit: cover;
+  display: none;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .iv-player-wrapper {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: auto;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
 }
 
 .iv-progressbar {
-    width: 100%;
-    height: 8px;
-    position: absolute;
-    bottom: 0;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-    overflow: hidden;
+  width: 100%;
+  height: 8px;
+  position: absolute;
+  bottom: 0;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  overflow: hidden;
 }
 
 .iv-progressbar::-webkit-progress-bar {
-    background-color: transparent;
-    border-bottom-right-radius: 8px;
-    border-bottom-left-radius: 8px;
+  background-color: hsl(value(--secondary));
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 
 .iv-progressbar::-webkit-progress-value {
-    background-color: var(--progress-bar);
+  background-color: hsl(var(--primary));
 }
 
 .iv-progressbar::-moz-progress-bar {
-    background-color: transparent;
-    border-bottom-right-radius: 8px;
-    border-bottom-left-radius: 8px;
+  background-color: hsl(var(--secondary));
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 
 .iv-progressbar::-moz-progress-value {
-    background-color: var(--progress-bar);
+  background-color: hsl(var(--primary));
 }
 
 @keyframes bounce-fade {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
 
-    50% {
-        transform: scale(1.2);
-    }
+  50% {
+    transform: scale(1.2);
+  }
 
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
