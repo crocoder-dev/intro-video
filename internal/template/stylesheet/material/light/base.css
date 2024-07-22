@@ -1,8 +1,8 @@
 :root {
-    --primary: #0f172a;
-    --primary-foreground: #f8fafc;
-    --primary-hover: #2b364f;
-    --progress-bar: #007bff;
+    --primary: #1976d2;
+    --primary-foreground: #fff;
+    --primary-hover: #1565c0;
+    --progress-bar: #1976d2;
 }
 
 .iv-card {
