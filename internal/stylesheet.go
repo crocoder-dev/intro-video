@@ -30,6 +30,14 @@ func (s Stylesheet) Process(props ProcessableFileProps, opts ProcessableFileOpts
 		templatePaths = append(templatePaths, "internal/template/stylesheet/shadcn/dark/bubble.css.tmpl")
 		templatePaths = append(templatePaths, "internal/template/stylesheet/shadcn/dark/cta.css.tmpl")
 		basePath = "internal/template/stylesheet/shadcn/dark/base.css"
+	case config.MaterialUiThemeLight:
+		templatePaths = append(templatePaths, "internal/template/stylesheet/material/light/bubble.css.tmpl")
+		templatePaths = append(templatePaths, "internal/template/stylesheet/material/light/cta.css.tmpl")
+		basePath = "internal/template/stylesheet/material/light/base.css"
+	case config.MaterialUiThemeDark:
+		templatePaths = append(templatePaths, "internal/template/stylesheet/material/dark/bubble.css.tmpl")
+		templatePaths = append(templatePaths, "internal/template/stylesheet/material/dark/cta.css.tmpl")
+		basePath = "internal/template/stylesheet/material/dark/base.css"
 	case config.NoneTheme:
 		return "", nil
 	default:
