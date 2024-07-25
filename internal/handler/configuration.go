@@ -24,6 +24,8 @@ func Configuration(c echo.Context) error {
 		{Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
 		{Caption: "MaterialUi Theme - Light", Value: config.MaterialUiThemeLight},
 		{Caption: "MaterialUi Theme - Dark", Value: config.MaterialUiThemeDark},
+		{Caption: "Tailwind Theme - Dark", Value: config.TailwindThemeDark},
+		{Caption: "Tailwind Theme - Light", Value: config.TailwindThemeLight},
 		{Caption: "None", Value: config.NoneTheme},
 	}
 

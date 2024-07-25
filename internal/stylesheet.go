@@ -38,6 +38,14 @@ func (s Stylesheet) Process(props ProcessableFileProps, opts ProcessableFileOpts
 		templatePaths = append(templatePaths, "internal/template/stylesheet/material/dark/bubble.css.tmpl")
 		templatePaths = append(templatePaths, "internal/template/stylesheet/material/dark/cta.css.tmpl")
 		basePath = "internal/template/stylesheet/material/dark/base.css"
+	case config.TailwindThemeDark:
+		templatePaths = append(templatePaths, "internal/template/stylesheet/tailwind/dark/bubble.css.tmpl")
+		templatePaths = append(templatePaths, "internal/template/stylesheet/tailwind/dark/cta.css.tmpl")
+		basePath = "internal/template/stylesheet/tailwind/dark/base.css"
+	case config.TailwindThemeLight:
+		templatePaths = append(templatePaths, "internal/template/stylesheet/tailwind/dark/bubble.css.tmpl")
+		templatePaths = append(templatePaths, "internal/template/stylesheet/tailwind/dark/cta.css.tmpl")
+		basePath = "internal/template/stylesheet/tailwind/dark/base.css"
 	case config.NoneTheme:
 		return "", nil
 	default:
