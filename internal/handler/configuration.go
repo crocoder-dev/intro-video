@@ -8,7 +8,13 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"log"
+	"strconv"
 
+	_ "github.com/tursodatabase/libsql-client-go/libsql"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/crocoder-dev/intro-video/internal/data"
+	"github.com/joho/godotenv"
 	"github.com/crocoder-dev/intro-video/internal"
 	"github.com/crocoder-dev/intro-video/internal/config"
 	"github.com/crocoder-dev/intro-video/internal/template"
@@ -48,6 +54,44 @@ func Configuration(c echo.Context) error {
 	return component.Render(context.Background(), c.Response().Writer)
 }
 
+func ConfigSave(c echo.Context) error {
+	err := godotenv.Load(".env")
+	if err != nil {
+		return err
+	}
+	dbUrl := os.Getenv("DATABASE_URL")
+	authToken := os.Getenv("TURSO_AUTH_TOKEN")
+
+	if dbUrl == "" || authToken == "" {
+		log.Fatal("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
+	}
+	store := data.Store{DatabaseUrl: dbUrl+"?authToken="+authToken, DriverName: "libsql"}
+
+	newVideo := data.NewVideo{Weight: 100, URL: c.FormValue(template.URL)}
+
+	newTheme := config.Theme(c.FormValue(template.THEME))
+	newBubbleEnabled, err := strconv.ParseBool(c.FormValue(template.BUBBLE_ENABLED))
+	newCtaEnabled, err := strconv.ParseBool(c.FormValue(template.CTA_ENABLED))
+
+	newConfiguration := data.NewConfiguration{
+		Theme: newTheme,
+		Bubble: config.Bubble{
+			Enabled: newBubbleEnabled,
+			TextContent: c.FormValue(template.BUBBLE_TEXT),
+		},
+		Cta: config.Cta{
+			Enabled: newCtaEnabled,
+			TextContent: c.FormValue(template.CTA_TEXT),
+		},
+	}
+
+	_, err = store.CreateInstance(newVideo, newConfiguration)
+	if err != nil {
+		return c.String(200, err.Error())
+	}
+
+	return c.String(http.StatusOK, "<strong>success!</strong>")
+}
 func IntroVideoCode(c echo.Context) error {
 	fmt.Println(
 		"url", c.FormValue(template.URL), "\n",

@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"fmt"
 
 	"github.com/crocoder-dev/intro-video/internal/config"
 	"github.com/crocoder-dev/intro-video/internal/data"
@@ -52,6 +53,7 @@ func TestCreateInstance(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	db, err := sql.Open("sqlite3", file.Name())
+	fmt.Println(file.Name())
 
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)

@@ -57,5 +57,6 @@ templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string) {
 				</div>
 			</div>
 		</div>
+		<button type="button" hx-post="/v/config" hx-target="#intro-video-code" hx-trigger="click" class="">Save</button>
 	</form>
 }

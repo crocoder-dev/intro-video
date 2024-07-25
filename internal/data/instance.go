@@ -3,7 +3,7 @@ package data
 import (
 	"database/sql"
 	"os"
-
+	"fmt"
 	"github.com/crocoder-dev/intro-video/internal/config"
 	"github.com/joho/godotenv"
 	"github.com/oklog/ulid/v2"
@@ -48,6 +48,7 @@ type Store struct {
 }
 
 func NewStore() (Store, error) {
+	fmt.Println("------------------new store--------------------")
 	err := godotenv.Load(".env")
 	if err != nil {
 		return Store{}, err
@@ -59,6 +60,7 @@ func NewStore() (Store, error) {
 }
 func (s *Store) LoadInstance(externalId []byte) (Instance, error) {
 	db, err := sql.Open(s.DriverName, s.DatabaseUrl)
+	fmt.Println("------------------load instance--------------------")
 	if err != nil {
 		return Instance{}, err
 	}
@@ -156,13 +158,13 @@ func (s *Store) LoadInstance(externalId []byte) (Instance, error) {
 }
 
 func (s *Store) CreateInstance(video NewVideo, configuration NewConfiguration) (Instance, error) {
+	fmt.Println(s.DriverName, s.DatabaseUrl)
 	db, err := sql.Open(s.DriverName, s.DatabaseUrl)
+	fmt.Println(err)
 	if err != nil {
 		return Instance{}, err
-
 	}
 	defer db.Close()
-
 	tx, err := db.Begin()
 	if err != nil {
 		return Instance{}, err
@@ -221,7 +223,7 @@ func (s *Store) CreateInstance(video NewVideo, configuration NewConfiguration) (
 			configuration_id,
 			instance_id
 		)
-		Values (?, ?, ?)
+		Values (?, ?, ?, ?)
 		RETURNING id;
 		`,
 		video.Weight,
@@ -229,6 +231,10 @@ func (s *Store) CreateInstance(video NewVideo, configuration NewConfiguration) (
 		configurationId,
 		instanceId,
 	).Scan(&videoId)
+
+	if err != nil {
+		return Instance{}, err
+	}
 
 	err = tx.Commit()
 	if err != nil {
