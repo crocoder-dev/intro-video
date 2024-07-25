@@ -44,6 +44,8 @@ function loadContainer() {
     body.appendChild(container);
   }
 
+  container.classList.add('iv');
+
   return container;
 }
 
@@ -76,7 +78,6 @@ function preload(videoConfig, callback) {
 }
 
 function setupIntroVideo({videoConfig, bubble, cta }) {
-  console.log('setupIntroVideo');
   const card = document.createElement('div');
   card.classList.add('iv-card');
 
