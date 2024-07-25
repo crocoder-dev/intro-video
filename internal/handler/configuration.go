@@ -104,6 +104,10 @@ func IntroVideoCode(c echo.Context) error {
 
 	url := c.FormValue(template.URL)
 
+	if url == "" {
+		url = template.DEFAULT_URL
+	}
+
 	theme, err := config.NewTheme(c.FormValue(template.THEME))
 	if err != nil {
 		fmt.Println(err)
@@ -123,7 +127,11 @@ func IntroVideoCode(c echo.Context) error {
 	var bubbleTextContent string
 
 	if bubbleEnabled {
-		bubbleTextContent = c.FormValue(template.BUBBLE_TEXT)
+		if c.FormValue(template.BUBBLE_TEXT) != "" {
+			bubbleTextContent = c.FormValue(template.BUBBLE_TEXT)
+		} else {
+			bubbleTextContent = template.DEFAULT_BUBBLE_TEXT
+		}
 	}
 
 	var ctaEnabled bool
@@ -139,7 +147,11 @@ func IntroVideoCode(c echo.Context) error {
 	var ctaTextContent string
 
 	if ctaEnabled {
-		ctaTextContent = c.FormValue(template.CTA_TEXT)
+		if c.FormValue(template.CTA_TEXT) != "" {
+			ctaTextContent = c.FormValue(template.CTA_TEXT)			
+		} else {
+			ctaTextContent = template.DEFAULT_CTA_TEXT
+		}
 	}
 
 	processableFileProps := internal.ProcessableFileProps{
