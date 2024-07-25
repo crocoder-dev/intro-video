@@ -1,17 +1,17 @@
 package main
 
 import (
-	"os"
-	"fmt"
-	"path/filepath"
-	"strings"
-	"io/fs"
-	"sort"
 	"database/sql"
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/crocoder-dev/intro-video/internal/data"
-	"github.com/joho/godotenv"
 	"github.com/crocoder-dev/intro-video/internal/handler"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -49,7 +49,6 @@ func main() {
 	e.Logger.Fatal(e.Start(":" + port))
 }
 
-
 func applyMigrations() error {
 	migrationsPath := filepath.Join("db", "migrations")
 
@@ -60,11 +59,11 @@ func applyMigrations() error {
 		}
 
 		if strings.HasSuffix(path, ".down.sql") {
-			//schemaFiles = append(schemaFiles, path)
+			// schemaFiles = append(schemaFiles, path)
 		}
 
 		if strings.HasSuffix(path, ".up.sql") {
-			//schemaFiles = append(schemaFiles, path)
+			// schemaFiles = append(schemaFiles, path)
 		}
 
 		return nil
@@ -81,11 +80,17 @@ func applyMigrations() error {
 	}
 	dbUrl := os.Getenv("DATABASE_URL")
 	authToken := os.Getenv("TURSO_AUTH_TOKEN")
+
 	if dbUrl == "" || authToken == "" {
 		return fmt.Errorf("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
 	}
-	store := data.Store{DatabaseUrl: dbUrl+"?authToken="+authToken, DriverName: "libsql"}
+	store := data.Store{DatabaseUrl: dbUrl + "?authToken=" + authToken, DriverName: "libsql"}
+
 	db, err := sql.Open(store.DriverName, store.DatabaseUrl)
+	if err != nil {
+		return err
+	}
+
 	for _, schemaFile := range schemaFiles {
 		schema, err := os.ReadFile(schemaFile)
 
