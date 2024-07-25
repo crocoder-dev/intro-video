@@ -99,12 +99,14 @@ function setupIntroVideo({videoConfig, bubble, cta }) {
   button.classList.add('iv-close-button');
   button.innerHTML = '&times;';
 
-  video.addEventListener('timeupdate', function() {
+  function updateProgressBar() {
+    if (!progressBar) return;
     const percentage = (video.currentTime / video.duration) * 100;
-    if (progressBar) {
-      progressBar.value = percentage;
-    }
-  });
+    progressBar.value = percentage;
+    requestAnimationFrame(updateProgressBar);
+  }
+
+  video.addEventListener('play', () => requestAnimationFrame(updateProgressBar))
 
   button.onclick = () => {
     card.style.opacity = 0;
