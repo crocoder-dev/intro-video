@@ -20,6 +20,7 @@ func main() {
 	e.GET("/v/:ulid", handler.Configuration)
 	e.GET("/v/new", handler.Configuration)
 	e.POST("/v/new", handler.IntroVideoCode)
+	e.GET("/sign-in", handler.SignIn)
 
 	e.File("/", "internal/template/demo.html")
 
