@@ -3,7 +3,7 @@ package data
 import (
 	"database/sql"
 	"os"
-	"fmt"
+
 	"github.com/crocoder-dev/intro-video/internal/config"
 	"github.com/joho/godotenv"
 	"github.com/oklog/ulid/v2"
