@@ -148,7 +148,7 @@ func IntroVideoCode(c echo.Context) error {
 
 	if ctaEnabled {
 		if c.FormValue(template.CTA_TEXT) != "" {
-			ctaTextContent = c.FormValue(template.CTA_TEXT)			
+			ctaTextContent = c.FormValue(template.CTA_TEXT)
 		} else {
 			ctaTextContent = template.DEFAULT_CTA_TEXT
 		}
