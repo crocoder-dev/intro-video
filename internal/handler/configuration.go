@@ -85,12 +85,14 @@ func ConfigSave(c echo.Context) error {
 		},
 	}
 
-	_, err = store.CreateInstance(newVideo, newConfiguration)
+	instance, err := store.CreateInstance(newVideo, newConfiguration)
 	if err != nil {
 		return c.String(200, err.Error())
 	}
+	redirectURL := fmt.Sprintf("/v/%d", instance.ExternalId)
+	c.Response().Header().Set("HX-Redirect", redirectURL)
+	return c.NoContent(http.StatusOK)
 
-	return c.String(http.StatusOK, "<strong>success!</strong>")
 }
 func IntroVideoCode(c echo.Context) error {
 	fmt.Println(
