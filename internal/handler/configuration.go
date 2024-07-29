@@ -6,19 +6,20 @@ import (
 	"fmt"
 	htmlTemplate "html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
-	"log"
 	"strconv"
 
-	_ "github.com/tursodatabase/libsql-client-go/libsql"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/crocoder-dev/intro-video/internal/data"
-	"github.com/joho/godotenv"
 	"github.com/crocoder-dev/intro-video/internal"
 	"github.com/crocoder-dev/intro-video/internal/config"
+	"github.com/crocoder-dev/intro-video/internal/data"
 	"github.com/crocoder-dev/intro-video/internal/template"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/oklog/ulid/v2"
+	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
 func Configuration(c echo.Context) error {
@@ -89,7 +90,7 @@ func ConfigSave(c echo.Context) error {
 	if err != nil {
 		return c.String(200, err.Error())
 	}
-	redirectURL := fmt.Sprintf("/v/%d", instance.ExternalId)
+	redirectURL := fmt.Sprintf("/v/%v", ulid.ULID(instance.ExternalId).String())
 	c.Response().Header().Set("HX-Redirect", redirectURL)
 	return c.NoContent(http.StatusOK)
 
