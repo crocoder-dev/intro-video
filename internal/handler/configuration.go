@@ -23,41 +23,85 @@ import (
 )
 
 func Configuration(c echo.Context) error {
-	_ = c.Param("ulid")
+	defaultConfig := config.IntroVideoFormValues{
+        Url:        "",
+        Theme:      config.DefaultTheme,
+        CtaEnabled:        false,
+        BubbleEnabled:     false,
+        CtaText:    "",
+        BubbleText: "",
+    }
 
-	themeOptions := []template.ThemeOption{
-		{Caption: "Default Theme", Value: config.DefaultTheme, Selected: true},
-		{Caption: "Shadcn Theme - Light", Value: config.ShadcnThemeLight},
-		{Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
-		{Caption: "MaterialUi Theme - Light", Value: config.MaterialUiThemeLight},
-		{Caption: "MaterialUi Theme - Dark", Value: config.MaterialUiThemeDark},
-		{Caption: "Tailwind Theme - Dark", Value: config.TailwindThemeDark},
-		{Caption: "Tailwind Theme - Light", Value: config.TailwindThemeLight},
-		{Caption: "None", Value: config.NoneTheme},
-	}
+    id := c.Param("ulid")
 
-	file, err := os.Open("internal/template/script/base.js")
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+    configuration := defaultConfig
 
-	base, err := io.ReadAll(file)
+    if id != "" && id != "new" {
+        err := godotenv.Load(".env")
+        if err != nil {
+            return err
+        }
 
-	if err != nil {
-		return generateMessage(c, "Failed to read the base script file.", http.StatusInternalServerError)
-	}
+        dbUrl := os.Getenv("DATABASE_URL")
+        authToken := os.Getenv("TURSO_AUTH_TOKEN")
+        if dbUrl == "" || authToken == "" {
+            return fmt.Errorf("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
+        }
 
-	var result bytes.Buffer
-	result.Write(base)
+        store := data.Store{DatabaseUrl: dbUrl + "?authToken=" + authToken, DriverName: "libsql"}
 
-	basePreviewJs := "<script>" + result.String() + "</script>"
+        byteId, err := ulid.Parse(id)
+        if err != nil {
+            fmt.Printf("Failed to parse ULID: %v. Using default configuration.\n", err)
+        } else {
+            loadedConfig, err := store.LoadConfig(byteId.Bytes())
+            if err != nil {
+                fmt.Printf("Failed to load configuration: %v. Using default configuration.\n", err)
+            } else {
+                configuration = config.IntroVideoFormValues{
+					Theme: loadedConfig.Theme,
+					CtaEnabled: loadedConfig.Cta.Enabled,
+					BubbleEnabled: loadedConfig.Bubble.Enabled,
+					BubbleText: loadedConfig.Bubble.TextContent,
+					CtaText: loadedConfig.Cta.TextContent,
+					Url: loadedConfig.VideoUrl,
+				}
+            }
+        }
+    }
 
-	component := template.Configuration(themeOptions, basePreviewJs)
+    themeOptions := []template.ThemeOption{
+        {Caption: "Default Theme", Value: config.DefaultTheme, Selected: true},
+        {Caption: "Shadcn Theme - Light", Value: config.ShadcnThemeLight},
+        {Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
+        {Caption: "MaterialUi Theme - Light", Value: config.MaterialUiThemeLight},
+        {Caption: "MaterialUi Theme - Dark", Value: config.MaterialUiThemeDark},
+        {Caption: "Tailwind Theme - Dark", Value: config.TailwindThemeDark},
+        {Caption: "Tailwind Theme - Light", Value: config.TailwindThemeLight},
+        {Caption: "None", Value: config.NoneTheme},
+    }
+
+    file, err := os.Open("internal/template/script/base.js")
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+    base, err := io.ReadAll(file)
+    if err != nil {
+        return generateMessage(c, "Failed to read the base script file.", http.StatusInternalServerError)
+    }
+    basePreviewJs := "<script>" + string(base) + "</script>"
+
+    component := template.Configuration(
+        themeOptions,
+        basePreviewJs,
+        configuration,
+    )
 	return component.Render(context.Background(), c.Response().Writer)
+
 }
 
-func ConfigSave(c echo.Context) error {
+func Config(c echo.Context) error {
 	err := godotenv.Load(".env")
 	if err != nil {
 		return err
@@ -73,10 +117,12 @@ func ConfigSave(c echo.Context) error {
 	newVideo := data.NewVideo{Weight: 100, URL: c.FormValue(template.URL)}
 
 	newTheme := config.Theme(c.FormValue(template.THEME))
+
 	newBubbleEnabled, err := strconv.ParseBool(c.FormValue(template.BUBBLE_ENABLED))
 	newCtaEnabled, err := strconv.ParseBool(c.FormValue(template.CTA_ENABLED))
 
 	newConfiguration := data.NewConfiguration{
+		Video: newVideo,
 		Theme: newTheme,
 		Bubble: config.Bubble{
 			Enabled: newBubbleEnabled,
@@ -88,15 +134,16 @@ func ConfigSave(c echo.Context) error {
 		},
 	}
 
-	instance, err := store.CreateInstance(newVideo, newConfiguration)
+	config, err := store.CreateConfiguration(newConfiguration)
 	if err != nil {
 		return c.String(200, err.Error())
 	}
-	redirectURL := fmt.Sprintf("/v/%v", ulid.ULID(instance.ExternalId).String())
+
+	redirectURL := fmt.Sprintf("/v/%v", ulid.ULID(config.Id).String())
 	c.Response().Header().Set("HX-Redirect", redirectURL)
 	return c.NoContent(http.StatusOK)
-
 }
+
 func IntroVideoCode(c echo.Context) error {
 	fmt.Println(
 		"url", c.FormValue(template.URL), "\n",
