@@ -42,46 +42,72 @@ func getMigrationSchemas() ([]string, error) {
 	return schemaFiles, nil
 }
 
-func TestCreateInstance(t *testing.T) {
+func setupTestDB(t *testing.T) (*sql.DB, string) {
 	file, err := os.CreateTemp("", "test*.db")
-
 	if err != nil {
 		t.Fatalf("failed to create database file: %v", err)
 	}
 
-	defer os.Remove(file.Name())
-
 	db, err := sql.Open("sqlite3", file.Name())
-
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
 	}
 
-	defer db.Close()
+	return db, file.Name()
+}
 
+func applySchemas(t *testing.T, db *sql.DB) {
 	schemaFiles, err := getMigrationSchemas()
-
 	if err != nil {
 		t.Fatalf("failed to read schema files: %v", err)
 	}
 
 	for _, schemaFile := range schemaFiles {
 		schema, err := os.ReadFile(schemaFile)
-
 		if err != nil {
 			t.Fatalf("failed to read schema file %s: %v", schemaFile, err)
 		}
 
 		_, err = db.Exec(string(schema))
-
 		if err != nil {
 			t.Fatalf("failed to execute schema %s: %v", schemaFile, err)
 		}
 	}
+}
 
-	store := data.Store{DatabaseUrl: file.Name(), DriverName: "sqlite3"}
+func insertTestData(t *testing.T, db *sql.DB, binUlid []byte) {
+	_, err := db.Exec(`
+		INSERT INTO configurations (id, bubble_enabled, bubble_text_content, cta_enabled, cta_text_content, theme, video_url)
+		VALUES (?, 1, "bubble text", 1, "cta text", "default", "video url");
+	`, binUlid)
 
-	newVideo := data.NewVideo{Weight: 100, URL: "url"}
+	if err != nil {
+		t.Fatalf("failed to insert test data: %v", err)
+	}
+}
+
+func equalConfigs(expected, actual data.Configuration) bool {
+	if string(expected.Id) != string(actual.Id) ||
+		expected.Theme != actual.Theme ||
+		expected.Bubble.Enabled != actual.Bubble.Enabled ||
+		expected.Bubble.TextContent != actual.Bubble.TextContent ||
+		expected.Cta.Enabled != actual.Cta.Enabled ||
+		expected.Cta.TextContent != actual.Cta.TextContent ||
+		expected.VideoUrl != actual.VideoUrl {
+		return false
+	}
+	return true
+}
+
+func TestCreateConfiguration(t *testing.T) {
+	db, dbName := setupTestDB(t)
+	defer os.Remove(dbName)
+	defer db.Close()
+
+	applySchemas(t, db)
+
+	store := data.Store{DatabaseUrl: dbName, DriverName: "sqlite3"}
+
 	newConfiguration := data.NewConfiguration{
 		Theme: config.DefaultTheme,
 		Bubble: config.Bubble{
@@ -94,182 +120,69 @@ func TestCreateInstance(t *testing.T) {
 		},
 	}
 
-	instance, err := store.CreateInstance(newVideo, newConfiguration)
-
+	configuration, err := store.CreateConfiguration(newConfiguration)
 	if err != nil {
 		t.Fatalf("failed to create instance: %v", err)
 	}
 
-	expected := data.Instance{
-		Id:             instance.Id,
-		ExternalId:     instance.ExternalId,
-		Videos:         map[int32]data.Video{},
-		Configurations: map[int32]data.Configuration{},
+	expected := data.Configuration{
+		Id:       configuration.Id,
+		Theme:    configuration.Theme,
+		Cta:      configuration.Cta,
+		Bubble:   configuration.Bubble,
+		VideoUrl: configuration.VideoUrl,
 	}
 
-	for _, video := range instance.Videos {
-		expected.Videos[video.Id] = data.Video{
-			Id:              video.Id,
-			Weight:          newVideo.Weight,
-			ConfigurationId: video.ConfigurationId,
-			URL:             newVideo.URL,
-		}
+	if !equalConfigs(expected, configuration) {
+		t.Fatalf("Expected configuration %+v, got %+v", expected, configuration)
 	}
-
-	for _, configuration := range instance.Configurations {
-		expected.Configurations[configuration.Id] = data.Configuration{
-			Id:     configuration.Id,
-			Bubble: newConfiguration.Bubble,
-			Cta:    newConfiguration.Cta,
-		}
-	}
-
-	if len(instance.Videos) != 1 {
-		t.Fatalf("Expected 1 video, got %d", len(instance.Videos))
-	}
-
-	if len(instance.Configurations) != 1 {
-		t.Fatalf("Expected 1 configuration, got %d", len(instance.Configurations))
-	}
-
-	for id, video := range expected.Videos {
-		if v, ok := instance.Videos[id]; !ok || v != video {
-			t.Fatalf("Video with id %d not found or does not match expected", id)
-		}
-	}
-
-	for id, config := range expected.Configurations {
-		if c, ok := instance.Configurations[id]; !ok || c != config {
-			t.Fatalf("Configuration with id %d not found or does not match expected", id)
-		}
-	}
-
 }
 
-func TestLoadInstance(t *testing.T) {
-
-	file, err := os.CreateTemp("", "test*.db")
-
-	if err != nil {
-		t.Fatalf("failed to create database file: %v", err)
-	}
-
-	defer os.Remove(file.Name())
-
-	db, err := sql.Open("sqlite3", file.Name())
-
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
-
+func TestLoadConfiguration(t *testing.T) {
+	db, dbName := setupTestDB(t)
+	defer os.Remove(dbName)
 	defer db.Close()
 
-	schemaFiles, err := getMigrationSchemas()
-
-	if err != nil {
-		t.Fatalf("failed to read schema files: %v", err)
-	}
-
-	for _, schemaFile := range schemaFiles {
-		schema, err := os.ReadFile(schemaFile)
-
-		if err != nil {
-			t.Fatalf("failed to read schema file %s: %v", schemaFile, err)
-		}
-
-		_, err = db.Exec(string(schema))
-
-		if err != nil {
-			t.Fatalf("failed to execute schema %s: %v", schemaFile, err)
-		}
-	}
+	applySchemas(t, db)
 
 	newUlid := ulid.Make()
-
 	binUlid := newUlid.Bytes()
 
-	if err != nil {
-		t.Fatalf("failed to marshal ulid: %v", err)
-	}
+	insertTestData(t, db, binUlid)
 
-	_, err = db.Exec(`
-		INSERT INTO instances (id, external_id) VALUES (1, ?);
+	store := data.Store{DatabaseUrl: dbName, DriverName: "sqlite3"}
 
-		INSERT INTO configurations (id, bubble_enabled, bubble_text_content, cta_enabled, cta_text_content, theme)
-		VALUES (1, 1, "bubble text", 1, "cta text", "default");
-
-		INSERT INTO videos (id, instance_id, configuration_id, weight, url)
-		VaLUES (1, 1, 1, 100, "url");
-		`, binUlid)
-
-	if err != nil {
-		t.Fatalf("failed to insert test data: %v", err)
-	}
-
-	store := data.Store{DatabaseUrl: file.Name(), DriverName: "sqlite3"}
-
-	instance, err := store.LoadInstance(binUlid)
-
+	configuration, err := store.LoadConfig(binUlid)
 	if err != nil {
 		t.Fatalf("failed to load instance: %v", err)
 	}
 
-	expected := data.Instance{
-		ExternalId: binUlid,
-		Videos: map[int32]data.Video{
-			1: {
-				Id:              1,
-				Weight:          100,
-				ConfigurationId: 1,
-				URL:             "url",
-			},
+	expected := data.Configuration{
+		Id:    binUlid,
+		Theme: config.DefaultTheme,
+		Bubble: config.Bubble{
+			Enabled:     true,
+			TextContent: "bubble text",
 		},
-		Configurations: map[int32]data.Configuration{
-			1: {
-				Id: 1,
-				Theme: config.DefaultTheme,
-				Bubble: config.Bubble{
-					Enabled:     true,
-					TextContent: "bubble text",
-				},
-				Cta: config.Cta{
-					Enabled:     true,
-					TextContent: "cta text",
-				},
-			},
+		Cta: config.Cta{
+			Enabled:     true,
+			TextContent: "cta text",
 		},
+		VideoUrl: "video url",
+	}
+
+	if !equalConfigs(expected, configuration) {
+		t.Fatalf("Expected configuration %+v, got %+v", expected, configuration)
 	}
 
 	expectedUlid := ulid.Make()
-
-	err = expectedUlid.UnmarshalBinary(instance.ExternalId)
-
+	err = expectedUlid.UnmarshalBinary(configuration.Id)
 	if err != nil {
 		t.Fatalf("failed to unmarshal ulid: %v", err)
 	}
 
-	if newUlid != expectedUlid {
+	if newUlid.Compare(expectedUlid) != 0 {
 		t.Fatalf("Expected ulid %s, got %s", expectedUlid, newUlid)
 	}
-
-	if len(instance.Videos) != len(expected.Videos) {
-		t.Fatalf("Expected %d videos, got %d", len(expected.Videos), len(instance.Videos))
-	}
-
-	if len(instance.Configurations) != len(expected.Configurations) {
-		t.Fatalf("Expected %d configurations, got %d", len(expected.Configurations), len(instance.Configurations))
-	}
-
-	for id, video := range expected.Videos {
-		if v, ok := instance.Videos[id]; !ok || v != video {
-			t.Fatalf("Video with id %d not found or does not match expected", id)
-		}
-	}
-
-	for id, config := range expected.Configurations {
-		if c, ok := instance.Configurations[id]; !ok || c != config {
-			t.Fatalf("Configuration with id %d not found or does not match expected", id)
-		}
-	}
-
 }
+

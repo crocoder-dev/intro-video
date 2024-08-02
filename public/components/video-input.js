@@ -1,5 +1,4 @@
 import { LitElement, html, css, unsafeCSS } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
-
 import globalStyles from '/style.css' with { type: 'css' };
 
 // green-500
@@ -68,7 +67,7 @@ class VideoInput extends LitElement {
   static styles = css`
     ${unsafeCSS([...globalStyles.rules].map(rule => rule.cssText).join(''))}
     :host {
-      display: block
+      display: block;
     }
   `;
 
@@ -76,14 +75,21 @@ class VideoInput extends LitElement {
     id: { type: String },
     name: { type: String },
     state: { type: String },
+    value: { type: String, reflect: true },
   }
-
 
   constructor() {
     super();
     this.state = states.initial;
     this.id = 'video-url';
     this.name = 'video-url';
+    this.value = '';
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has('value')) {
+      this.handleInput({ target: { value: this.value } });
+    }
   }
 
   isVideoUrlValid() {
@@ -96,7 +102,7 @@ class VideoInput extends LitElement {
     this.state = states.loading;
     this.requestUpdate();
     this.timeout = setTimeout(async () => {
-      const value = this.shadowRoot.getElementById(this.id).value;
+      const value = this.value;
       if (value !== '') {
         try {
           await validateVideoUrl(value);
@@ -129,6 +135,7 @@ class VideoInput extends LitElement {
           pattern="https://.*"
           placeholder="https://example.com"
           class="block w-full rounded-md border-0 py-1.5 pr-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          .value="${this.value}"
           required
           @input="${this.handleInput}"
         />

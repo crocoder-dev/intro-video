@@ -24,7 +24,7 @@ script handleErrors() {
 	});
 }
 
-templ Configuration(themeOptions []ThemeOption, basePreviewJs string) {
+templ Configuration(themeOptions []ThemeOption, basePreviewJs string, formInputValues config.IntroVideoFormValues) {
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
@@ -55,7 +55,7 @@ templ Configuration(themeOptions []ThemeOption, basePreviewJs string) {
 				</header>
 				<div class="mx-auto w-full max-w-7xl grow xl:px-2">
 					<div class="w-full border-b border-gray-200">
-						@IntroVideoForm(themeOptions, basePreviewJs)
+						@IntroVideoForm(themeOptions, basePreviewJs, formInputValues)
 					</div>
 					@IntroVideoPreview("", "", "", "")
 				</div>
