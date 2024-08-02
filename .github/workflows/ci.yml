@@ -25,7 +25,7 @@ jobs:
       - name: Setup bun
         uses: oven-sh/setup-bun@1e54087d4fbb32511d4f1a0a7fc56c9ae57f032a # v2
         with:
-          bun-version: 1.1.18
+          bun-version: 1.1.21
 
       - name: Setup go
         uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
