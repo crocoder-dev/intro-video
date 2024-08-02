@@ -1,5 +1,4 @@
-import { LitElement, html, css, unsafeCSS } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
-import globalStyles from '/style.css' with { type: 'css' };
+import { LitElement, html, css } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
 
 // green-500
 const validSVG = html`
@@ -65,9 +64,43 @@ function validateVideoUrl(url) {
 class VideoInput extends LitElement {
   static formAssociated = true;
   static styles = css`
-    ${unsafeCSS([...globalStyles.rules].map(rule => rule.cssText).join(''))}
     :host {
       display: block;
+    }
+
+    .video-input {
+      display: block;
+      width: 100%;
+      border-radius: 0.375rem;
+      border-width: 0;
+      padding-top: 0.375rem;
+      padding-bottom: 0.375rem;
+      padding-right: 2.25rem;
+      color: #111827;
+      box-shadow: inset 0 0 0 1px rgba(209, 213, 219, 1), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+    }
+
+    .video-input::placeholder {
+      color: #9CA3AF;
+    }
+
+    .video-input:focus {
+      box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 1), 0 0 0 2px rgba(99, 102, 241, 1);
+    }
+
+    .video-container {
+      position: relative;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .indicator {
+      position: absolute;
+      right: 0.5rem;
     }
   `;
 
@@ -127,19 +160,19 @@ class VideoInput extends LitElement {
 
   render() {
     return html`
-      <div class="relative mt-2 flex items-center gap-2">
+      <div class="video-container">
         <input
           id="${this.id}"
           name="${this.name}"
           type="url"
           pattern="https://.*"
           placeholder="https://example.com"
-          class="block w-full rounded-md border-0 py-1.5 pr-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          class="video-input"
           .value="${this.value}"
           required
           @input="${this.handleInput}"
         />
-        <div class="absolute right-2">
+        <div class="indicator">
           ${this.state === states.loading ? loaderSVG : ''}
           ${this.state === states.valid ? validSVG : ''}
           ${this.state === states.error ? errorSVG : ''}
