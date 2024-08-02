@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS `videos`;
+DROP TABLE IF EXISTS `instances`;
+DROP TABLE IF EXISTS `configurations`;
+
 CREATE TABLE `configurations` (
 	`id` BLOB UNIQUE NOT NULL,
   `theme` TEXT DEFAULT 'default',
