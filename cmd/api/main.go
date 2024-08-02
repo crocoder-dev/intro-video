@@ -10,6 +10,7 @@ import (
 
 func main() {
 	e := echo.New()
+
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -20,6 +21,7 @@ func main() {
 	e.GET("/v/:ulid", handler.Configuration)
 	e.GET("/v/new", handler.Configuration)
 	e.POST("/v/new", handler.IntroVideoCode)
+	e.POST("/v/config", handler.Config)
 
 	e.File("/", "internal/template/demo.html")
 
@@ -33,3 +35,4 @@ func main() {
 
 	e.Logger.Fatal(e.Start(":" + port))
 }
+

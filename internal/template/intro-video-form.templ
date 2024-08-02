@@ -1,5 +1,7 @@
 package template
 
+import "github.com/crocoder-dev/intro-video/internal/config"
+
 const (
 	URL            = "url"
 	BUBBLE_ENABLED = "bubble-enabled"
@@ -15,9 +17,15 @@ const (
 	DEFAULT_BUBBLE_TEXT = "Click on the video to play it!"
 )
 
-templ Toggle(id string, name string, text string) {
+templ Toggle(id string, name string, text string, enabled bool) {
+	<script>
+		function handleToggleChange(id) {
+			const checkbox = document.getElementById(id.id);
+			checkbox.value = checkbox.checked
+		}
+	</script>
 	<div class="flex items-center">
-		<input id={ id } type="checkbox" name={ name } value="true" class="hidden" />
+		<input id={ id } type="checkbox" name={ name } class="hidden" checked?={ enabled } onchange="handleToggleChange({id})" />
 		<label for={ id }>
 			<div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2" role="switch" aria-checked="false">
 				<span class="sr-only">Use setting</span>
@@ -30,15 +38,16 @@ templ Toggle(id string, name string, text string) {
 	</div>
 }
 
-templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string) {
+templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string, formValues config.IntroVideoFormValues) {
 	@templ.Raw(basePreviewJs)
 	<form class="max-w-[700px] m-auto p-6" id="introVideoForm" hx-post="/v/new" hx-trigger="change throttle:300ms" hx-swap="innerHTML" hx-target="#intro-video-code">
 		<label for={ URL } class="block text-sm font-medium leading-6 text-gray-900">Video URL</label>
-		<video-input id={ URL } name={ URL }></video-input>
+		<video-input id={ URL } name={ URL } value={ formValues.Url }></video-input>
+
 		<label for={ THEME } class="mt-2 block text-sm font-medium leading-6 text-gray-900">Theme</label>
-		<select id={ THEME } name={ THEME } class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+		<select id={ THEME } name={ THEME } class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6" value={ string(formValues.Theme) }>
 			for _, option := range themeOptions {
-				if option.Selected {
+				if string(option.Value) == string(formValues.Theme) {
 					<option selected value={ string(option.Value) }>{ option.Caption }</option>
 				} else {
 					<option value={ string(option.Value) }>{ option.Caption }</option>
@@ -46,22 +55,24 @@ templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string) {
 			}
 		</select>
 		<div class="py-8 mt-8 border-y border-slate-300">
-			@Toggle(BUBBLE_ENABLED, BUBBLE_ENABLED, "Enable Text Bubble")
+			@Toggle(BUBBLE_ENABLED, BUBBLE_ENABLED, "Enable Text Bubble", formValues.BubbleEnabled)
 			<div id="bubble-section" class="pt-4">
 				<label for={ BUBBLE_TEXT } class="mt-2 block text-sm font-medium leading-6 text-gray-900">Bubble text content</label>
 				<div class="mt-2">
-					<input type="text" placeholder={ DEFAULT_BUBBLE_TEXT } name={ BUBBLE_TEXT } id={ BUBBLE_TEXT } class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+					<input type="text" value={formValues.BubbleText} placeholder={ DEFAULT_BUBBLE_TEXT } name={ BUBBLE_TEXT } id={ BUBBLE_TEXT } class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
 				</div>
 			</div>
 		</div>
 		<div class="py-8 border-slate-300">
-			@Toggle(CTA_ENABLED, CTA_ENABLED, "Enable Call to Action Button")
+			@Toggle(CTA_ENABLED, CTA_ENABLED, "Enable Call to Action Button", formValues.CtaEnabled)
 			<div id="cta-section" class="pt-4">
 				<label for={ CTA_TEXT } class="mt-2 block text-sm font-medium leading-6 text-gray-900">CTA text content</label>
 				<div class="mt-2">
-					<input type="text" placeholder={ DEFAULT_CTA_TEXT } name={ CTA_TEXT } id={ CTA_TEXT } class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+					<input type="text" value={formValues.CtaText} placeholder={ DEFAULT_CTA_TEXT } name={ CTA_TEXT } id={ CTA_TEXT } class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
 				</div>
 			</div>
 		</div>
+		<button type="button" hx-post="/v/config" hx-target="#intro-video-code" hx-trigger="click" class="">Save</button>
 	</form>
 }
+
