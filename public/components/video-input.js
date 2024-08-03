@@ -66,18 +66,26 @@ class VideoInput extends LitElement {
   static styles = css`
     :host {
       display: block;
+      box-sizing: border-box;
+      font-family GeistSans, GeistSans_Fallback;
     }
 
     .video-input {
+      box-sizing: inherit;
+      border: 2px solid rgb(107, 114, 128);
+      font-family: inherit;
       display: block;
       width: 100%;
       border-radius: 0.375rem;
       border-width: 0;
       padding-top: 0.375rem;
       padding-bottom: 0.375rem;
-      padding-right: 2.25rem;
       color: #111827;
-      box-shadow: inset 0 0 0 1px rgba(209, 213, 219, 1), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(209, 213, 219) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      padding-inline-end: 12px;
+      padding-inline-start: 12px;
+      padding-left: 12px;
+      padding-right: 12px;
       font-size: 0.875rem;
       line-height: 1.5rem;
     }
@@ -87,7 +95,10 @@ class VideoInput extends LitElement {
     }
 
     .video-input:focus {
-      box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 1), 0 0 0 2px rgba(99, 102, 241, 1);
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(79, 70, 229) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      border-color: #2563eb;
     }
 
     .video-container {
