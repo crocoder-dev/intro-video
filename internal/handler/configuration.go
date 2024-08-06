@@ -91,7 +91,6 @@ func Configuration(c echo.Context) error {
         return generateMessage(c, "Failed to read the base script file.", http.StatusInternalServerError)
     }
     basePreviewJs := "<script>" + string(base) + "</script>"
-
     component := template.Configuration(
         themeOptions,
         basePreviewJs,
@@ -170,9 +169,9 @@ func IntroVideoCode(c echo.Context) error {
 
 	var bubbleEnabled bool
 
-	if bubbleEnabledRaw == "" {
+	if bubbleEnabledRaw == "" || bubbleEnabledRaw == "off" {
 		bubbleEnabled = false
-	} else if bubbleEnabledRaw == "true" {
+	} else if bubbleEnabledRaw == "on" || bubbleEnabledRaw == "true" {
 		bubbleEnabled = true
 	}
 
@@ -189,11 +188,10 @@ func IntroVideoCode(c echo.Context) error {
 	var ctaEnabled bool
 
 	ctaEnabledRaw := c.FormValue(template.CTA_ENABLED)
-
-	if ctaEnabledRaw == "" {
-		ctaEnabled = false
-	} else if ctaEnabledRaw == "true" {
+	if ctaEnabledRaw == "on" || ctaEnabledRaw == "true" {
 		ctaEnabled = true
+	} else if ctaEnabledRaw == "off" ||  ctaEnabledRaw == "" {
+		ctaEnabled = false
 	}
 
 	var ctaTextContent string
