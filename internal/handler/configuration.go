@@ -6,7 +6,6 @@ import (
 	"fmt"
 	htmlTemplate "html/template"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -95,50 +94,114 @@ func Configuration(c echo.Context) error {
         themeOptions,
         basePreviewJs,
         configuration,
+		id,
     )
 	return component.Render(context.Background(), c.Response().Writer)
 
 }
 
-func Config(c echo.Context) error {
+func initializeStore() (data.Store, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
-		return err
+		return data.Store{}, err
 	}
 	dbUrl := os.Getenv("DATABASE_URL")
 	authToken := os.Getenv("TURSO_AUTH_TOKEN")
-
 	if dbUrl == "" || authToken == "" {
-		log.Fatal("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
+		return data.Store{}, fmt.Errorf("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
 	}
-	store := data.Store{DatabaseUrl: dbUrl+"?authToken="+authToken, DriverName: "libsql"}
+	return data.Store{DatabaseUrl: dbUrl + "?authToken=" + authToken, DriverName: "libsql"}, nil
+}
 
+func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 	newVideo := data.NewVideo{Weight: 100, URL: c.FormValue(template.URL)}
-
 	newTheme := config.Theme(c.FormValue(template.THEME))
 
-	newBubbleEnabled, err := strconv.ParseBool(c.FormValue(template.BUBBLE_ENABLED))
-	newCtaEnabled, err := strconv.ParseBool(c.FormValue(template.CTA_ENABLED))
+	newBubbleEnabledStr := c.FormValue(template.BUBBLE_ENABLED)
+	if newBubbleEnabledStr == "" {
+		newBubbleEnabledStr = "false"
+	}
+	newBubbleEnabled, err := strconv.ParseBool(newBubbleEnabledStr)
+	if err != nil {
+		return data.NewConfiguration{}, err
+	}
 
-	newConfiguration := data.NewConfiguration{
+	newCtaEnabledStr := c.FormValue(template.CTA_ENABLED)
+	if newCtaEnabledStr == "" {
+		newCtaEnabledStr = "false"
+	}
+
+	newCtaEnabled, err := strconv.ParseBool(newCtaEnabledStr)
+	if err != nil {
+
+		fmt.Println(err.Error())
+		return data.NewConfiguration{}, err
+	}
+
+	return data.NewConfiguration{
 		Video: newVideo,
 		Theme: newTheme,
 		Bubble: config.Bubble{
-			Enabled: newBubbleEnabled,
+			Enabled:     newBubbleEnabled,
 			TextContent: c.FormValue(template.BUBBLE_TEXT),
 		},
 		Cta: config.Cta{
-			Enabled: newCtaEnabled,
+			Enabled:     newCtaEnabled,
 			TextContent: c.FormValue(template.CTA_TEXT),
 		},
+	}, nil
+}
+
+func CreateConfig(c echo.Context) error {
+	store, err := initializeStore()
+	if err != nil {
+		return err
+	}
+
+	newConfiguration, err := parseFormValues(c)
+	if err != nil {
+		fmt.Println("err", err.Error())
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	config, err := store.CreateConfiguration(newConfiguration)
 	if err != nil {
-		return c.String(200, err.Error())
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	redirectURL := fmt.Sprintf("/v/%v", ulid.ULID(config.Id).String())
+	fmt.Println(redirectURL)
+	c.Response().Header().Set("HX-Redirect", redirectURL)
+	return c.NoContent(http.StatusOK)
+}
+
+func UpdateConfig(c echo.Context) error {
+	id := c.Param("ulid")
+	if id == "" {
+		return c.String(http.StatusBadRequest, "Missing configuration ID")
+	}
+
+	store, err := initializeStore()
+	if err != nil {
+		return err
+	}
+
+	updatedConfiguration, err := parseFormValues(c)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	configID, err := ulid.Parse(id)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Invalid configuration ID")
+	}
+
+	_, err = store.UpdateConfiguration(configID.Bytes(), updatedConfiguration)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	redirectURL := fmt.Sprintf("/v/%v", id)
 	c.Response().Header().Set("HX-Redirect", redirectURL)
 	return c.NoContent(http.StatusOK)
 }
