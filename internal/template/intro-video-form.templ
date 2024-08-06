@@ -1,6 +1,7 @@
 package template
 
 import "github.com/crocoder-dev/intro-video/internal/config"
+import "strconv"
 
 const (
 	URL            = "url"
@@ -25,7 +26,7 @@ templ Toggle(id string, name string, text string, enabled bool) {
 		}
 	</script>
 	<div class="flex items-center">
-		<input id={ id } type="checkbox" name={ name } class="hidden" checked?={ enabled } onchange="handleToggleChange({id})" />
+		<input id={ id } type="checkbox" name={ name } class="hidden" checked?={ enabled } value={ strconv.FormatBool(enabled) } onchange="handleToggleChange({id})" />
 		<label for={ id }>
 			<div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2" role="switch" aria-checked="false">
 				<span class="sr-only">Use setting</span>
