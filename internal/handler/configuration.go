@@ -133,8 +133,6 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 
 	newCtaEnabled, err := strconv.ParseBool(newCtaEnabledStr)
 	if err != nil {
-
-		fmt.Println(err.Error())
 		return data.NewConfiguration{}, err
 	}
 
@@ -160,7 +158,6 @@ func CreateConfig(c echo.Context) error {
 
 	newConfiguration, err := parseFormValues(c)
 	if err != nil {
-		fmt.Println("err", err.Error())
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
@@ -170,7 +167,6 @@ func CreateConfig(c echo.Context) error {
 	}
 
 	redirectURL := fmt.Sprintf("/v/%v", ulid.ULID(config.Id).String())
-	fmt.Println(redirectURL)
 	c.Response().Header().Set("HX-Redirect", redirectURL)
 	return c.NoContent(http.StatusOK)
 }
