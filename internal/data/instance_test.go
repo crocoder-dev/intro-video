@@ -87,7 +87,8 @@ func insertTestData(t *testing.T, db *sql.DB, binUlid []byte) {
 }
 
 func equalConfigs(expected, actual data.Configuration) bool {
-	if expected.Theme != actual.Theme ||
+	if string(expected.Id) != string(actual.Id) ||
+		expected.Theme != actual.Theme ||
 		expected.Bubble.Enabled != actual.Bubble.Enabled ||
 		expected.Bubble.TextContent != actual.Bubble.TextContent ||
 		expected.Cta.Enabled != actual.Cta.Enabled ||
