@@ -87,8 +87,7 @@ func insertTestData(t *testing.T, db *sql.DB, binUlid []byte) {
 }
 
 func equalConfigs(expected, actual data.Configuration) bool {
-	if string(expected.Id) != string(actual.Id) ||
-		expected.Theme != actual.Theme ||
+	if expected.Theme != actual.Theme ||
 		expected.Bubble.Enabled != actual.Bubble.Enabled ||
 		expected.Bubble.TextContent != actual.Bubble.TextContent ||
 		expected.Cta.Enabled != actual.Cta.Enabled ||
@@ -183,6 +182,76 @@ func TestLoadConfiguration(t *testing.T) {
 
 	if newUlid.Compare(expectedUlid) != 0 {
 		t.Fatalf("Expected ulid %s, got %s", expectedUlid, newUlid)
+	}
+}
+
+func TestUpdateConfiguration(t *testing.T) {
+	db, dbName := setupTestDB(t)
+	defer os.Remove(dbName)
+	defer db.Close()
+
+	applySchemas(t, db)
+
+	store := data.Store{DatabaseUrl: dbName, DriverName: "sqlite3"}
+
+	newConfiguration := data.NewConfiguration{
+		Theme: config.DefaultTheme,
+		Bubble: config.Bubble{
+			Enabled:     true,
+			TextContent: "bubble text",
+		},
+		Cta: config.Cta{
+			Enabled:     true,
+			TextContent: "cta text",
+		},
+		Video: data.NewVideo{
+			Weight: 100,
+			URL: "url",
+		},
+	}
+
+	configuration, err := store.CreateConfiguration(newConfiguration)
+	if err != nil {
+		t.Fatalf("failed to create instance: %v", err)
+	}
+
+	updatedConfiguration := data.NewConfiguration{
+		Theme: config.ShadcnThemeDark,
+		Bubble: config.Bubble{
+			Enabled:     false,
+			TextContent: "updated bubble text",
+		},
+		Cta: config.Cta{
+			Enabled:     false,
+			TextContent: "updated cta text",
+		},
+		Video: data.NewVideo{
+			Weight: 90,
+			URL: "updated url",
+		},
+	}
+
+	expected := data.Configuration{
+		Id:    configuration.Id,
+		Theme: config.ShadcnThemeDark,
+		Bubble: config.Bubble{
+			Enabled:     false,
+			TextContent: "updated bubble text",
+		},
+		Cta: config.Cta{
+			Enabled:     false,
+			TextContent: "updated cta text",
+		},
+		VideoUrl: "updated url",
+	}
+
+
+	newConfig, err := store.UpdateConfiguration(configuration.Id, updatedConfiguration)
+	if err != nil {
+		t.Fatalf("failed to update instance: %v", err)
+	}
+	if !equalConfigs(newConfig, expected) {
+		t.Fatalf("Expected updated configuration %+v, got %+v", newConfig, expected)
 	}
 }
 

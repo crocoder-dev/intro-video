@@ -183,6 +183,7 @@ func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configurati
 		Theme:  configuration.Theme,
 		Bubble:	config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
 		Cta:	config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
+		VideoUrl: configuration.Video.URL,
 	}
 
 	return newConfiguration, nil
@@ -235,6 +236,7 @@ func (s *Store) UpdateConfiguration(id []byte, configuration NewConfiguration) (
 		Theme:  configuration.Theme,
 		Bubble:	config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
 		Cta:	config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
+		VideoUrl: configuration.Video.URL,
 	}
 
 	return updatedConfiguration, nil
