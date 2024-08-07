@@ -137,7 +137,7 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 	}
 
 	return data.NewConfiguration{
-		Video: newVideo,
+		VideoUrl: newVideo.URL,
 		Theme: newTheme,
 		Bubble: config.Bubble{
 			Enabled:     newBubbleEnabled,

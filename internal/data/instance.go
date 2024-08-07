@@ -31,7 +31,7 @@ type Video struct {
 }
 
 type NewConfiguration struct {
-	Video  NewVideo
+	VideoUrl string
 	Theme  config.Theme
 	Bubble config.Bubble
 	Cta    config.Cta
@@ -160,7 +160,7 @@ func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configurati
 		RETURNING id;
 		`,
 		binUlid,
-		configuration.Video.URL,
+		configuration.VideoUrl,
 		configuration.Theme,
 		configuration.Bubble.Enabled,
 		configuration.Bubble.TextContent,
@@ -183,6 +183,7 @@ func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configurati
 		Theme:  configuration.Theme,
 		Bubble:	config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
 		Cta:	config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
+		VideoUrl: configuration.VideoUrl,
 	}
 
 	return newConfiguration, nil
@@ -211,7 +212,7 @@ func (s *Store) UpdateConfiguration(id []byte, configuration NewConfiguration) (
 			cta_text_content = ?
 		WHERE id = ?
 		`,
-		configuration.Video.URL,
+		configuration.VideoUrl,
 		configuration.Theme,
 		configuration.Bubble.Enabled,
 		configuration.Bubble.TextContent,
@@ -235,6 +236,7 @@ func (s *Store) UpdateConfiguration(id []byte, configuration NewConfiguration) (
 		Theme:  configuration.Theme,
 		Bubble:	config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
 		Cta:	config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
+		VideoUrl: configuration.VideoUrl,
 	}
 
 	return updatedConfiguration, nil
