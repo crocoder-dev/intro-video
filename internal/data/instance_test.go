@@ -117,6 +117,7 @@ func TestCreateConfiguration(t *testing.T) {
 			Enabled:     true,
 			TextContent: "cta text",
 		},
+		VideoUrl: "url",
 	}
 
 	configuration, err := store.CreateConfiguration(newConfiguration)
@@ -204,10 +205,7 @@ func TestUpdateConfiguration(t *testing.T) {
 			Enabled:     true,
 			TextContent: "cta text",
 		},
-		Video: data.NewVideo{
-			Weight: 100,
-			URL: "url",
-		},
+		VideoUrl: "url",
 	}
 
 	configuration, err := store.CreateConfiguration(newConfiguration)
@@ -225,10 +223,7 @@ func TestUpdateConfiguration(t *testing.T) {
 			Enabled:     false,
 			TextContent: "updated cta text",
 		},
-		Video: data.NewVideo{
-			Weight: 90,
-			URL: "updated url",
-		},
+		VideoUrl:  "updated url",
 	}
 
 	expected := data.Configuration{
