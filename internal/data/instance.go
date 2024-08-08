@@ -31,7 +31,7 @@ type Video struct {
 }
 
 type NewConfiguration struct {
-	Video  NewVideo
+	VideoUrl string
 	Theme  config.Theme
 	Bubble config.Bubble
 	Cta    config.Cta
@@ -160,7 +160,7 @@ func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configurati
 		RETURNING id;
 		`,
 		binUlid,
-		configuration.Video.URL,
+		configuration.VideoUrl,
 		configuration.Theme,
 		configuration.Bubble.Enabled,
 		configuration.Bubble.TextContent,
@@ -183,8 +183,62 @@ func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configurati
 		Theme:  configuration.Theme,
 		Bubble:	config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
 		Cta:	config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
+		VideoUrl: configuration.VideoUrl,
 	}
 
 	return newConfiguration, nil
+}
+
+func (s *Store) UpdateConfiguration(id []byte, configuration NewConfiguration) (Configuration, error) {
+	db, err := sql.Open(s.DriverName, s.DatabaseUrl)
+	if err != nil {
+		return Configuration{}, err
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return Configuration{}, err
+	}
+
+	_, err = tx.Exec(`
+		UPDATE configurations
+		SET
+			video_url = ?,
+			theme = ?,
+			bubble_enabled = ?,
+			bubble_text_content = ?,
+			cta_enabled = ?,
+			cta_text_content = ?
+		WHERE id = ?
+		`,
+		configuration.VideoUrl,
+		configuration.Theme,
+		configuration.Bubble.Enabled,
+		configuration.Bubble.TextContent,
+		configuration.Cta.Enabled,
+		configuration.Cta.TextContent,
+		id,
+	)
+
+	if err != nil {
+		tx.Rollback()
+		return Configuration{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return Configuration{}, err
+	}
+
+	updatedConfiguration := Configuration{
+		Id:     id,
+		Theme:  configuration.Theme,
+		Bubble:	config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
+		Cta:	config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
+		VideoUrl: configuration.VideoUrl,
+	}
+
+	return updatedConfiguration, nil
 }
 
