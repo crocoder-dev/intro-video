@@ -24,6 +24,7 @@ func main() {
 	e.POST("/v/new", handler.IntroVideoCode)
 	e.POST("/v/config", handler.CreateConfig)
 
+	e.GET("/sign-in", handler.SignIn)
 	e.File("/", "internal/template/demo.html")
 
 	e.Static("/", "public")
