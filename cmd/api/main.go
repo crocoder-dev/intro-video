@@ -19,9 +19,10 @@ func main() {
 	e.GET("/demo/style.css", handler.Stylesheet)
 
 	e.GET("/v/:ulid", handler.Configuration)
+	e.POST("/v/:ulid", handler.UpdateConfig)
 	e.GET("/v/new", handler.Configuration)
 	e.POST("/v/new", handler.IntroVideoCode)
-	e.POST("/v/config", handler.Config)
+	e.POST("/v/config", handler.CreateConfig)
 
 	e.File("/", "internal/template/demo.html")
 

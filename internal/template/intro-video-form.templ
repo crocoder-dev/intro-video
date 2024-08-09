@@ -1,6 +1,7 @@
 package template
 
 import "github.com/crocoder-dev/intro-video/internal/config"
+import "strconv"
 
 const (
 	URL            = "url"
@@ -25,7 +26,7 @@ templ Toggle(id string, name string, text string, enabled bool) {
 		}
 	</script>
 	<div class="flex items-center">
-		<input id={ id } type="checkbox" name={ name } class="hidden" checked?={ enabled } onchange="handleToggleChange({id})" />
+		<input id={ id } type="checkbox" name={ name } class="hidden" checked?={ enabled } value={ strconv.FormatBool(enabled) } onchange="handleToggleChange({id})" />
 		<label for={ id }>
 			<div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2" role="switch" aria-checked="false">
 				<span class="sr-only">Use setting</span>
@@ -38,7 +39,7 @@ templ Toggle(id string, name string, text string, enabled bool) {
 	</div>
 }
 
-templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string, formValues config.IntroVideoFormValues) {
+templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string, formValues config.IntroVideoFormValues, ulid string) {
 	@templ.Raw(basePreviewJs)
 	<form class="max-w-[700px] m-auto p-6" id="introVideoForm" hx-post="/v/new" hx-trigger="change throttle:300ms" hx-swap="innerHTML" hx-target="#intro-video-code">
 		<label for={ URL } class="block text-sm font-medium leading-6 text-gray-900">Video URL</label>
@@ -72,7 +73,11 @@ templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string, formValue
 				</div>
 			</div>
 		</div>
-		<button type="button" hx-post="/v/config" hx-target="#intro-video-code" hx-trigger="click" class="">Save</button>
+		if ulid != "" {
+			<button type="button" hx-post={ "/v/" + ulid } hx-target="#intro-video-code" hx-trigger="click" class="">Update</button>
+		} else {
+			<button type="button" hx-post="/v/config" hx-target="#intro-video-code" hx-trigger="click" class="">Save</button>
+		}
 	</form>
 }
 
