@@ -130,12 +130,6 @@ class VideoInput extends LitElement {
     this.value = '';
   }
 
-  updated(changedProperties) {
-    if (changedProperties.has('value')) {
-      this.handleInput({ target: { value: this.value } });
-    }
-  }
-
   isVideoUrlValid() {
     return this.state === states.valid;
   }
@@ -160,14 +154,11 @@ class VideoInput extends LitElement {
           this.state = states.error;
           this.value = '';
         }
-        this.requestUpdate();
       } else {
-        this.state = states.error;
-        this.value = '';
-        this.requestUpdate();
+        this.state = states.initial;
       }
-    }, 500);
-  }
+      this.requestUpdate();
+    }, 500);  }
 
   render() {
     return html`
