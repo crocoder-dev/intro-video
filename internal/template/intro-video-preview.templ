@@ -1,15 +1,15 @@
 package template
 
 script copyToClipboard(style string, script string) {
-				const combinedContent = style + "\n\n" + script;
-				const tempTextarea = document.createElement('textarea');
-				tempTextarea.value = combinedContent;
-				document.body.appendChild(tempTextarea);
-				tempTextarea.select();
-				document.execCommand('copy');
-				document.body.removeChild(tempTextarea);
-				alert('Preview code copied to clipboard!');
-	}
+	const combinedContent = style + "\n\n" + script;
+	const tempTextarea = document.createElement('textarea');
+	tempTextarea.value = combinedContent;
+	document.body.appendChild(tempTextarea);
+	tempTextarea.select();
+	document.execCommand('copy');
+	document.body.removeChild(tempTextarea);
+	alert('Preview code copied to clipboard!');
+}
 
 templ copyToClipboardComponent(previewStyle string, previewScript string) {
 	<button id="copy-button" class="flex items-center p-2 bg-blue-500 text-white rounded hover:bg-blue-700"

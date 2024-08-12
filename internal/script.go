@@ -60,9 +60,7 @@ func (s Script) Process(props ProcessableFileProps, opts ProcessableFileOpts) (s
 		return "", err
 	}
 
-	if opts.Export {
-		//err = t.ExecuteTemplate(&buf, "", nil)
-	} else if opts.Preview {
+	if opts.Preview {
 		err = t.ExecuteTemplate(&end, "end-preview", nil)
 	} else {
 		err = t.ExecuteTemplate(&end, "end", nil)
