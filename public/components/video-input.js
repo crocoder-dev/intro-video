@@ -1,5 +1,4 @@
-import { LitElement, html, css, unsafeCSS } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
-import globalStyles from '/style.css' with { type: 'css' };
+import { LitElement, html, css } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
 
 // green-500
 const validSVG = html`
@@ -65,9 +64,54 @@ function validateVideoUrl(url) {
 class VideoInput extends LitElement {
   static formAssociated = true;
   static styles = css`
-    ${unsafeCSS([...globalStyles.rules].map(rule => rule.cssText).join(''))}
     :host {
       display: block;
+      box-sizing: border-box;
+      font-family GeistSans, GeistSans_Fallback;
+    }
+
+    .video-input {
+      box-sizing: inherit;
+      border: 2px solid rgb(107, 114, 128);
+      font-family: inherit;
+      display: block;
+      width: 100%;
+      border-radius: 0.375rem;
+      border-width: 0;
+      padding-top: 0.375rem;
+      padding-bottom: 0.375rem;
+      color: #111827;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(209, 213, 219) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      padding-inline-end: 12px;
+      padding-inline-start: 12px;
+      padding-left: 12px;
+      padding-right: 12px;
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+    }
+
+    .video-input::placeholder {
+      color: #9CA3AF;
+    }
+
+    .video-input:focus {
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(79, 70, 229) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      border-color: #2563eb;
+    }
+
+    .video-container {
+      position: relative;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .indicator {
+      position: absolute;
+      right: 0.5rem;
     }
   `;
 
@@ -84,12 +128,6 @@ class VideoInput extends LitElement {
     this.id = 'video-url';
     this.name = 'video-url';
     this.value = '';
-  }
-
-  updated(changedProperties) {
-    if (changedProperties.has('value')) {
-      this.handleInput({ target: { value: this.value } });
-    }
   }
 
   isVideoUrlValid() {
@@ -116,30 +154,27 @@ class VideoInput extends LitElement {
           this.state = states.error;
           this.value = '';
         }
-        this.requestUpdate();
       } else {
-        this.state = states.error;
-        this.value = '';
-        this.requestUpdate();
+        this.state = states.initial;
       }
-    }, 500);
-  }
+      this.requestUpdate();
+    }, 500);  }
 
   render() {
     return html`
-      <div class="relative mt-2 flex items-center gap-2">
+      <div class="video-container">
         <input
           id="${this.id}"
           name="${this.name}"
           type="url"
           pattern="https://.*"
           placeholder="https://example.com"
-          class="block w-full rounded-md border-0 py-1.5 pr-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          class="video-input"
           .value="${this.value}"
           required
           @input="${this.handleInput}"
         />
-        <div class="absolute right-2">
+        <div class="indicator">
           ${this.state === states.loading ? loaderSVG : ''}
           ${this.state === states.valid ? validSVG : ''}
           ${this.state === states.error ? errorSVG : ''}
