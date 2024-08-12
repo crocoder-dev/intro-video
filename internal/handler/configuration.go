@@ -276,6 +276,9 @@ func IntroVideoCode(c echo.Context) error {
 		},
 	}
 
+	exportScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Export: true, Minify: true})
+	exportScript = "<script>" + exportScript + "</script>"
+
 	previewScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})
 	previewScript = "<script>" + previewScript + "</script>"
 
@@ -294,7 +297,7 @@ func IntroVideoCode(c echo.Context) error {
 		return generateMessage(c, "An error occurred while generating the stylesheet. Please try again later.", http.StatusInternalServerError)
 	}
 
-	component := template.IntroVideoPreview(js, css, previewScript, previewStyle)
+	component := template.IntroVideoPreview(js, css, previewScript, previewStyle, exportScript)
 	return component.Render(context.Background(), c.Response().Writer)
 }
 
