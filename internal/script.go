@@ -33,9 +33,7 @@ func (s Script) Process(props ProcessableFileProps, opts ProcessableFileOpts) (s
 	var buf bytes.Buffer
 	var end bytes.Buffer
 
-	if opts.Export {
-		//err = t.ExecuteTemplate(&buf, "", nil)
-	} else if opts.Preview {
+	if opts.Preview {
 		err = t.ExecuteTemplate(&buf, "start-preview", nil)
 	} else {
 		err = t.ExecuteTemplate(&buf, "start", props.Bubble)
