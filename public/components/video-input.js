@@ -160,6 +160,14 @@ class VideoInput extends LitElement {
       this.requestUpdate();
     }, 500);  }
 
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (this.value !== '') {
+      this.handleInput({ target: { value: this.value } });
+    }
+  }
+
   render() {
     return html`
       <div class="video-container">
