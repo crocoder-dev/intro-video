@@ -1,6 +1,5 @@
 package template
 
-
 import "github.com/crocoder-dev/intro-video/internal/template/shared"
 
 script copyToClipboard(style string, script string) {
@@ -14,6 +13,7 @@ script copyToClipboard(style string, script string) {
 
 	showToast('Copied to clipboard!');
 }
+
 
 templ copyToClipboardComponent(previewStyle string, previewScript string) {
 	<div class="relative flex items-center">

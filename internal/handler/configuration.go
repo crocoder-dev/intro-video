@@ -10,10 +10,12 @@ import (
 	"os"
 	"strconv"
 
+	//templ "github.com/a-h/templ"
 	"github.com/crocoder-dev/intro-video/internal"
 	"github.com/crocoder-dev/intro-video/internal/config"
 	"github.com/crocoder-dev/intro-video/internal/data"
 	"github.com/crocoder-dev/intro-video/internal/template"
+	"github.com/crocoder-dev/intro-video/internal/template/shared"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	_ "github.com/mattn/go-sqlite3"
@@ -296,6 +298,7 @@ func IntroVideoCode(c echo.Context) error {
 		fmt.Println(err)
 		return generateMessage(c, "An error occurred while generating the stylesheet. Please try again later.", http.StatusInternalServerError)
 	}
+	shared.SuccessToast("errorko").Render(context.Background(), c.Response().Writer)
 
 	component := template.IntroVideoPreview(js, css, previewScript, previewStyle, exportScript)
 	return component.Render(context.Background(), c.Response().Writer)
