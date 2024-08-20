@@ -275,9 +275,6 @@ func IntroVideoCode(c echo.Context) error {
 		},
 	}
 
-	exportScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Export: true, Minify: true})
-	exportScript = "<script>" + exportScript + "</script>"
-
 	previewScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})
 	previewScript = "<script>" + previewScript + "</script>"
 
