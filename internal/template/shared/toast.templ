@@ -14,20 +14,18 @@ templ errorIcon() {
 }
 
 func SuccessToast(message string) templ.Component {
-	c := "bg-green-200";
-	i := successIcon()
-	return toast(message, c, i)
+	cls := "bg-green-200";
+	icon := successIcon()
+	return toast(message, cls, icon)
 }
 
 func ErrorToast(message string) templ.Component {
-	c := "bg-red-200";
-	i := errorIcon()
-	return toast(message, c, i)
+	cls := "bg-red-200";
+	icon := errorIcon()
+	return toast(message, cls, icon)
 }
 
-
 templ toast(message string, class string, icon templ.Component) {
-	// bg-green-500 text-white px-4 py-2 rounded shadow-md opacity-0 transition-opacity duration-300
 	<div id="container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2">
 		<div class={"pointer-events-auto w-full min-w-52 overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5", templ.KV(class, class != "")}>
 			<div class="p-4">

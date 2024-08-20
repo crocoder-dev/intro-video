@@ -2,35 +2,25 @@ package template
 
 import "github.com/crocoder-dev/intro-video/internal/template/shared"
 
-script copyToClipboard(style string, script string) {
-	const combinedContent = style + "\n\n" + script;
+script copyToClipboard(content string) {
 	const tempTextarea = document.createElement('textarea');
-	tempTextarea.value = combinedContent;
+	tempTextarea.value = content;
 	document.body.appendChild(tempTextarea);
 	tempTextarea.select();
 	document.execCommand('copy');
 	document.body.removeChild(tempTextarea);
-
-	showToast('Copied to clipboard!');
 }
 
-
-templ copyToClipboardComponent(previewStyle string, previewScript string) {
+templ copyToClipboardComponent(content string) {
 	<div class="relative flex items-center">
-		<button id="copy-button" class="p-2 text-gray-500 hover:text-gray-700 flex flex-row gap-4"
-			onClick={copyToClipboard(previewStyle, previewScript)}>
+		<button class="p-2 text-gray-500 hover:text-gray-700 flex flex-row gap-4"
+			onClick={copyToClipboard(content)}>
 			@shared.CopyToClipboardIcon()
-			<span
-				id="copy-message"
-				className="ml-2 text-black transition-colors">
-				Click to copy
-			</span>
-
 		</button>
 	</div>
 }
 
-templ IntroVideoPreview(js string, css string, previewScript string, previewStyle string, exportScript string) {
+templ IntroVideoPreview(js string, css string, previewScript string, previewStyle string) {
 	if (previewStyle != "") {
 		@templ.Raw(previewStyle)
 	}
@@ -39,57 +29,38 @@ templ IntroVideoPreview(js string, css string, previewScript string, previewStyl
 	}
 
 	<div id="intro-video-code" class="flex flex-col w-full max-w-7xl">
-		if (previewStyle != "" && previewScript != "") {
-			<div class="flex w-full p-4">
-				@copyToClipboardComponent(previewStyle, exportScript)
-			</div>
-		}
 		<div class="flex flex-col md:flex-row">
-		<div class="w-full p-4 md:w-1/2">
-			<div class="w-full p-4 min-h-64 bg-gray-100 rounded-md border border-gray-300 overflow-auto">
-				<div class="text-gray-500 mb-4 select-none text-md">Javascript preview</div>
-				<code>{ js }</code>
+			<div class="w-full p-4 md:w-1/2">
+				<div class="w-full p-4 min-h-64 bg-gray-100 rounded-md border border-gray-300 overflow-auto">
+					<div class="text-gray-500 mb-4 select-none text-md flex justify-between items-center">
+						<span>JavaScript preview</span>
+						if js != "" {
+							@copyToClipboardComponent(js)
+						}
+					</div>
+					<code>{ js }</code>
+				</div>
 			</div>
-		</div>
-		<div class="w-full p-4 md:w-1/2">
-			<div class="w-full p-4 min-h-64 bg-gray-100 rounded-md border border-gray-300 overflow-auto">
-				<div class="text-gray-500 mb-4 select-none text-md">CSS preview</div>
-				<code>{ css }</code>
+			<div class="w-full p-4 md:w-1/2">
+				<div class="w-full p-4 min-h-64 bg-gray-100 rounded-md border border-gray-300 overflow-auto">
+					<div class="text-gray-500 mb-4 select-none text-md flex justify-between items-center">
+						<span>CSS preview</span>
+						if css != "" {
+							@copyToClipboardComponent(css)
+						}
+					</div>
+					<code>{ css }</code>
+				</div>
 			</div>
-		</div>
 		</div>
 	</div>
+
 	if js != "" {
 		<script>
 			s = setup()
 			s.cleanUp();
 			s.run();
-
-			function showToast(message) {
-				const existingToast = document.getElementById('copy-toast');
-				if (existingToast) {
-					document.body.removeChild(existingToast);
-				}
-
-				const toast = document.createElement('div');
-				toast.id = 'copy-toast';
-				toast.textContent = message;
-				toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded shadow-md opacity-0 transition-opacity duration-300';
-
-				document.body.appendChild(toast);
-
-				setTimeout(() => {
-					toast.style.opacity = 1;
-				}, 10);
-
-				setTimeout(() => {
-					toast.style.opacity = 0;
-					setTimeout(() => {
-						if (toast.parentNode) {
-							document.body.removeChild(toast);
-						}
-					}, 300);
-				}, 3000);
-}		</script>
+		</script>
 	}
 }
+
