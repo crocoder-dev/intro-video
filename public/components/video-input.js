@@ -152,7 +152,6 @@ class VideoInput extends LitElement {
           this.dispatchEvent(changeEvent);
         } catch (error) {
           this.state = states.error;
-          this.value = '';
         }
       } else {
         this.state = states.initial;
