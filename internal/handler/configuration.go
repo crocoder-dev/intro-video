@@ -295,7 +295,6 @@ func IntroVideoCode(c echo.Context) error {
 		fmt.Println(err)
 		return shared.ErrorToast("An error occurred while generating the stylesheet. Please try again later.").Render(context.Background(), c.Response().Writer)
 	}
-
 	component := template.IntroVideoPreview(js, css, previewScript, previewStyle)
 	return component.Render(context.Background(), c.Response().Writer)
 }
