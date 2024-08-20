@@ -41,6 +41,7 @@ templ Toggle(id string, name string, text string, enabled bool) {
 
 templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string, formValues config.IntroVideoFormValues, ulid string) {
 	@templ.Raw(basePreviewJs)
+
 	<form class="max-w-[700px] m-auto p-6" id="introVideoForm" hx-post="/v/new" hx-trigger="change throttle:300ms" hx-swap="innerHTML" hx-target="#intro-video-code">
 		<label for={ URL } class="block text-sm font-medium leading-6 text-gray-900">Video URL</label>
 		<video-input id={ URL } name={ URL } value={ formValues.Url }></video-input>
@@ -73,11 +74,14 @@ templ IntroVideoForm(themeOptions []ThemeOption, basePreviewJs string, formValue
 				</div>
 			</div>
 		</div>
+
 		if ulid != "" {
 			<button type="button" hx-post={ "/v/" + ulid } hx-target="#intro-video-code" hx-trigger="click" class="">Update</button>
 		} else {
 			<button type="button" hx-post="/v/config" hx-target="#intro-video-code" hx-trigger="click" class="">Save</button>
 		}
 	</form>
+
+	<div id="toaster" hx-swap-oob="true"></div>
 }
 

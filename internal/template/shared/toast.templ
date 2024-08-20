@@ -33,22 +33,19 @@ func ErrorToast(message string) templ.Component {
 	return toast(message, cls, icon, id)
 }
 
-script removeAllPreviousToasts(idToKeep string) {
-	const existingToasts = document.querySelectorAll('[id^="toast-"]');
-	existingToasts.forEach(toast => {
-		if (toast.id !== "toast-"+idToKeep) {
-			toast.remove();
-		}
-	});
-
+script timeOut(id string) {
 	setTimeout(function() {
-		document.getElementById("toast-"+idToKeep).remove();
+		if(document.getElementById("toaster")
+			&& document.getElementById("toaster").getAttribute("data-id") == "toast-"+id) {
+			const x = "toast-"+id;
+			document.querySelector('[data-id="'+x+'"]').innerHTML = "";
+		}
 	}, 3000);
 }
 
 templ toast(message string, class string, icon templ.Component, id string) {
-	@removeAllPreviousToasts(id)
-	<div id={"toast-" + id} class="fixed bottom-4 left-1/2 transform -translate-x-1/2">
+	@timeOut(id)
+	<div id="toaster" hx-swap-oob="true" data-id={"toast-" + id} class="fixed bottom-4 left-1/2 transform -translate-x-1/2">
 		<div class={"pointer-events-auto w-full min-w-52 overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5", templ.KV(class, class != "")}>
 			<div class="p-4">
 				<div class="flex items-start">
