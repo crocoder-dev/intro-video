@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"net/url"
 
 	"github.com/crocoder-dev/intro-video/internal"
 	"github.com/crocoder-dev/intro-video/internal/config"
@@ -50,11 +51,11 @@ func Configuration(c echo.Context) error {
 
         byteId, err := ulid.Parse(id)
         if err != nil {
-            fmt.Printf("Failed to parse ULID: %v. Using default configuration.\n", err)
+			return shared.ErrorToast("Failed to parse ULID: %v. Using default configuration.").Render(context.Background(), c.Response().Writer)
         } else {
             loadedConfig, err := store.LoadConfig(byteId.Bytes())
             if err != nil {
-                fmt.Printf("Failed to load configuration: %v. Using default configuration.\n", err)
+				return shared.ErrorToast("Failed to load configuration: %v. Using default configuration.").Render(context.Background(), c.Response().Writer)
             } else {
                 configuration = config.IntroVideoFormValues{
 					Theme: loadedConfig.Theme,
@@ -81,7 +82,7 @@ func Configuration(c echo.Context) error {
 
     file, err := os.Open("internal/template/script/base.js")
     if err != nil {
-        return err
+		return shared.ErrorToast("Something went wrong!").Render(context.Background(), c.Response().Writer)
     }
     defer file.Close()
     base, err := io.ReadAll(file)
@@ -149,6 +150,28 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 	}, nil
 }
 
+func validateConfiguration(config data.NewConfiguration) error {
+	if err := validateURL(config.VideoUrl); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateURL(videoUrl string) error {
+	if videoUrl == "" {
+		return fmt.Errorf("Video url is empty!")
+	}
+
+	parsedUrl, err := url.ParseRequestURI(videoUrl)
+	if err != nil || parsedUrl.Scheme == "" || parsedUrl.Host == "" {
+		return fmt.Errorf("Video url is invalid!")
+	}
+
+
+	return nil
+}
+
 func CreateConfig(c echo.Context) error {
 	store, err := initializeStore()
 	if err != nil {
@@ -157,12 +180,18 @@ func CreateConfig(c echo.Context) error {
 
 	newConfiguration, err := parseFormValues(c)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return shared.ErrorToast(string(http.StatusBadRequest) + "Something went wrong!").Render(context.Background(), c.Response().Writer)
+	}
+
+	err = validateConfiguration(newConfiguration)
+	if err != nil {
+		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
 	config, err := store.CreateConfiguration(newConfiguration)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+
+		return shared.ErrorToast(string(http.StatusInternalServerError) + err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
 	redirectURL := fmt.Sprintf("/v/%v", ulid.ULID(config.Id).String())
@@ -173,7 +202,7 @@ func CreateConfig(c echo.Context) error {
 func UpdateConfig(c echo.Context) error {
 	id := c.Param("ulid")
 	if id == "" {
-		return c.String(http.StatusBadRequest, "Missing configuration ID")
+		return shared.ErrorToast(string(http.StatusBadRequest) + "Missing configuration ID!").Render(context.Background(), c.Response().Writer)
 	}
 
 	store, err := initializeStore()
@@ -183,17 +212,17 @@ func UpdateConfig(c echo.Context) error {
 
 	updatedConfiguration, err := parseFormValues(c)
 	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return shared.ErrorToast(string(http.StatusBadRequest) + err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
 	configID, err := ulid.Parse(id)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Invalid configuration ID")
+		return shared.ErrorToast(string(http.StatusBadRequest) + "Invalid configuration ID").Render(context.Background(), c.Response().Writer)
 	}
 
 	_, err = store.UpdateConfiguration(configID.Bytes(), updatedConfiguration)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		return shared.ErrorToast(string(http.StatusInternalServerError) + err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
 	redirectURL := fmt.Sprintf("/v/%v", id)
