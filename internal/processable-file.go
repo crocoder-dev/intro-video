@@ -10,7 +10,6 @@ type ProcessableFileProps struct {
 }
 
 type ProcessableFileOpts struct {
-	Export bool
 	Preview bool
 	Minify bool
 }
