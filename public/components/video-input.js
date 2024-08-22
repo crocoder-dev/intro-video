@@ -120,6 +120,7 @@ class VideoInput extends LitElement {
     name: { type: String },
     state: { type: String },
     value: { type: String, reflect: true },
+    dirty: { type: Boolean }
   }
 
   constructor() {
@@ -128,6 +129,7 @@ class VideoInput extends LitElement {
     this.id = 'video-url';
     this.name = 'video-url';
     this.value = '';
+    this.dirty = false;
   }
 
   isVideoUrlValid() {
@@ -137,14 +139,22 @@ class VideoInput extends LitElement {
   handleInput(e) {
     clearTimeout(this.timeout);
     this.value = e.target.value;
+
+    if (this.value !== this.initialValue) {
+      this.dirty = true;
+    }
+
     this.state = states.loading;
     this.requestUpdate();
+
     this.timeout = setTimeout(async () => {
       const value = this.value;
+
       if (value !== '') {
         try {
           await validateVideoUrl(value);
           this.state = states.valid;
+          this.dirty = false;
           const changeEvent = new Event('change', {
             bubbles: true,
             composed: true,
@@ -153,11 +163,15 @@ class VideoInput extends LitElement {
         } catch (error) {
           this.state = states.error;
         }
+      } else if (this.dirty) {
+        this.state = states.error;
       } else {
         this.state = states.initial;
       }
+
       this.requestUpdate();
-    }, 500);  }
+    }, 500);
+  }
 
 
   connectedCallback() {
