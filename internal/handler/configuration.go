@@ -180,7 +180,7 @@ func CreateConfig(c echo.Context) error {
 
 	newConfiguration, err := parseFormValues(c)
 	if err != nil {
-		return shared.ErrorToast(string(http.StatusBadRequest) + "Something went wrong!").Render(context.Background(), c.Response().Writer)
+		return shared.ErrorToast("Something went wrong!").Render(context.Background(), c.Response().Writer)
 	}
 
 	err = validateConfiguration(newConfiguration)
@@ -191,7 +191,7 @@ func CreateConfig(c echo.Context) error {
 	config, err := store.CreateConfiguration(newConfiguration)
 	if err != nil {
 
-		return shared.ErrorToast(string(http.StatusInternalServerError) + err.Error()).Render(context.Background(), c.Response().Writer)
+		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
 	redirectURL := fmt.Sprintf("/v/%v", ulid.ULID(config.Id).String())
@@ -202,7 +202,7 @@ func CreateConfig(c echo.Context) error {
 func UpdateConfig(c echo.Context) error {
 	id := c.Param("ulid")
 	if id == "" {
-		return shared.ErrorToast(string(http.StatusBadRequest) + "Missing configuration ID!").Render(context.Background(), c.Response().Writer)
+		return shared.ErrorToast("Missing configuration ID!").Render(context.Background(), c.Response().Writer)
 	}
 
 	store, err := initializeStore()
@@ -212,17 +212,17 @@ func UpdateConfig(c echo.Context) error {
 
 	updatedConfiguration, err := parseFormValues(c)
 	if err != nil {
-		return shared.ErrorToast(string(http.StatusBadRequest) + err.Error()).Render(context.Background(), c.Response().Writer)
+		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
 	configID, err := ulid.Parse(id)
 	if err != nil {
-		return shared.ErrorToast(string(http.StatusBadRequest) + "Invalid configuration ID").Render(context.Background(), c.Response().Writer)
+		return shared.ErrorToast("Invalid configuration ID").Render(context.Background(), c.Response().Writer)
 	}
 
 	_, err = store.UpdateConfiguration(configID.Bytes(), updatedConfiguration)
 	if err != nil {
-		return shared.ErrorToast(string(http.StatusInternalServerError) + err.Error()).Render(context.Background(), c.Response().Writer)
+		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
 	redirectURL := fmt.Sprintf("/v/%v", id)
