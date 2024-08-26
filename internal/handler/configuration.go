@@ -70,13 +70,14 @@ func Configuration(c echo.Context) error {
     }
 
     themeOptions := []template.ThemeOption{
-        {Caption: "Default Theme", Value: config.DefaultTheme, Selected: true},
+        {Caption: "Default Theme", Value: config.DefaultTheme},
         {Caption: "Shadcn Theme - Light", Value: config.ShadcnThemeLight},
         {Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
         {Caption: "MaterialUi Theme - Light", Value: config.MaterialUiThemeLight},
         {Caption: "MaterialUi Theme - Dark", Value: config.MaterialUiThemeDark},
         {Caption: "Tailwind Theme - Dark", Value: config.TailwindThemeDark},
         {Caption: "Tailwind Theme - Light", Value: config.TailwindThemeLight},
+        {Caption: "CroCoder Theme", Value: config.Crocoder, Selected: true},
         {Caption: "None", Value: config.NoneTheme},
     }
 
