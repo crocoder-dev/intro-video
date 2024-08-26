@@ -46,6 +46,10 @@ func (s Stylesheet) Process(props ProcessableFileProps, opts ProcessableFileOpts
 		templatePaths = append(templatePaths, "internal/template/stylesheet/tailwind/light/bubble.css.tmpl")
 		templatePaths = append(templatePaths, "internal/template/stylesheet/tailwind/light/cta.css.tmpl")
 		basePath = "internal/template/stylesheet/tailwind/light/base.css"
+	case config.Crocoder:
+		templatePaths = append(templatePaths, "internal/template/stylesheet/crocoder/bubble.css.tmpl")
+		templatePaths = append(templatePaths, "internal/template/stylesheet/crocoder/cta.css.tmpl")
+		basePath = "internal/template/stylesheet/crocoder/base.css"
 	case config.NoneTheme:
 		return "", nil
 	default:

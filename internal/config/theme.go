@@ -12,12 +12,13 @@ const (
 	MaterialUiThemeDark  Theme = "materialUiDark"
 	TailwindThemeDark    Theme = "tailwindDark"
 	TailwindThemeLight   Theme = "tailwindLight"
+	Crocoder			 Theme = "crocoder"
 	NoneTheme            Theme = "none"
 )
 
 func NewTheme(theme string) (Theme, error) {
 	switch Theme(theme) {
-	case DefaultTheme, ShadcnThemeLight, ShadcnThemeDark, MaterialUiThemeDark, MaterialUiThemeLight, TailwindThemeDark, TailwindThemeLight, NoneTheme:
+	case DefaultTheme, ShadcnThemeLight, ShadcnThemeDark, MaterialUiThemeDark, MaterialUiThemeLight, TailwindThemeDark, TailwindThemeLight, Crocoder, NoneTheme:
 		return Theme(theme), nil
 	default:
 		return "", errors.New("invalid Theme")
