@@ -153,7 +153,7 @@ func TestLoadConfiguration(t *testing.T) {
 
 	store := data.Store{DatabaseUrl: dbName, DriverName: "sqlite3"}
 
-	configuration, err := store.LoadConfig(binUlid)
+	configuration, err := store.LoadConfiguration(binUlid)
 	if err != nil {
 		t.Fatalf("failed to load instance: %v", err)
 	}
@@ -224,7 +224,7 @@ func TestUpdateConfiguration(t *testing.T) {
 			Enabled:     false,
 			TextContent: "updated cta text",
 		},
-		VideoUrl:  "updated url",
+		VideoUrl: "updated url",
 	}
 
 	expected := data.Configuration{
@@ -241,7 +241,6 @@ func TestUpdateConfiguration(t *testing.T) {
 		VideoUrl: "updated url",
 	}
 
-
 	newConfig, err := store.UpdateConfiguration(configuration.Id, updatedConfiguration)
 	if err != nil {
 		t.Fatalf("failed to update instance: %v", err)
@@ -250,4 +249,3 @@ func TestUpdateConfiguration(t *testing.T) {
 		t.Fatalf("Expected updated configuration %+v, got %+v", newConfig, expected)
 	}
 }
-

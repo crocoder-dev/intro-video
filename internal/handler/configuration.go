@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
-	"net/url"
 
 	"github.com/crocoder-dev/intro-video/internal"
 	"github.com/crocoder-dev/intro-video/internal/config"
@@ -21,82 +21,81 @@ import (
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
-func Configuration(c echo.Context) error {
+func GetConfiguration(c echo.Context) error {
 	defaultConfig := config.IntroVideoFormValues{
-        Url:        "",
-        Theme:      config.DefaultTheme,
-        CtaEnabled:        false,
-        BubbleEnabled:     false,
-        CtaText:    "",
-        BubbleText: "",
-    }
+		Url:           "",
+		Theme:         config.DefaultTheme,
+		CtaEnabled:    false,
+		BubbleEnabled: false,
+		CtaText:       "",
+		BubbleText:    "",
+	}
 
-    id := c.Param("ulid")
+	id := c.Param("ulid")
 
-    configuration := defaultConfig
+	configuration := defaultConfig
 
-    if id != "" && id != "new" {
-        err := godotenv.Load(".env")
-        if err != nil {
-            return err
-        }
+	if id != "" && id != "new" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			return err
+		}
 
-        dbUrl := os.Getenv("DATABASE_URL")
-        authToken := os.Getenv("TURSO_AUTH_TOKEN")
-        if dbUrl == "" || authToken == "" {
-            return fmt.Errorf("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
-        }
+		dbUrl := os.Getenv("DATABASE_URL")
+		if dbUrl == "" {
+			return fmt.Errorf("DATABASE_URL must be set in .env file")
+		}
 
-        store := data.Store{DatabaseUrl: dbUrl + "?authToken=" + authToken, DriverName: "libsql"}
+		store := data.Store{DatabaseUrl: dbUrl, DriverName: "libsql"}
 
-        byteId, err := ulid.Parse(id)
-        if err != nil {
+		byteId, err := ulid.Parse(id)
+		if err != nil {
 			return shared.ErrorToast("Failed to parse ULID: %v. Using default configuration.").Render(context.Background(), c.Response().Writer)
-        } else {
-            loadedConfig, err := store.LoadConfig(byteId.Bytes())
-            if err != nil {
+		} else {
+			loadedConfig, err := store.LoadConfiguration(byteId.Bytes())
+			if err != nil {
 				return shared.ErrorToast("Failed to load configuration: %v. Using default configuration.").Render(context.Background(), c.Response().Writer)
-            } else {
-                configuration = config.IntroVideoFormValues{
-					Theme: loadedConfig.Theme,
-					CtaEnabled: loadedConfig.Cta.Enabled,
+			} else {
+				configuration = config.IntroVideoFormValues{
+					Theme:         loadedConfig.Theme,
+					CtaEnabled:    loadedConfig.Cta.Enabled,
 					BubbleEnabled: loadedConfig.Bubble.Enabled,
-					BubbleText: loadedConfig.Bubble.TextContent,
-					CtaText: loadedConfig.Cta.TextContent,
-					Url: loadedConfig.VideoUrl,
+					BubbleText:    loadedConfig.Bubble.TextContent,
+					CtaText:       loadedConfig.Cta.TextContent,
+					Url:           loadedConfig.VideoUrl,
 				}
-            }
-        }
-    }
+			}
+		}
+	}
 
-    themeOptions := []template.ThemeOption{
-        {Caption: "Default Theme", Value: config.DefaultTheme},
-        {Caption: "Shadcn Theme - Light", Value: config.ShadcnThemeLight},
-        {Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
-        {Caption: "MaterialUi Theme - Light", Value: config.MaterialUiThemeLight},
-        {Caption: "MaterialUi Theme - Dark", Value: config.MaterialUiThemeDark},
-        {Caption: "Tailwind Theme - Dark", Value: config.TailwindThemeDark},
-        {Caption: "Tailwind Theme - Light", Value: config.TailwindThemeLight},
-        {Caption: "CroCoder Theme", Value: config.Crocoder, Selected: true},
-        {Caption: "None", Value: config.NoneTheme},
-    }
+	themeOptions := []template.ThemeOption{
+		{Caption: "Default Theme", Value: config.DefaultTheme},
+		{Caption: "Shadcn Theme - Light", Value: config.ShadcnThemeLight},
+		{Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
+		{Caption: "MaterialUi Theme - Light", Value: config.MaterialUiThemeLight},
+		{Caption: "MaterialUi Theme - Dark", Value: config.MaterialUiThemeDark},
+		{Caption: "Tailwind Theme - Dark", Value: config.TailwindThemeDark},
+		{Caption: "Tailwind Theme - Light", Value: config.TailwindThemeLight},
+		{Caption: "CroCoder Theme", Value: config.Crocoder, Selected: true},
+		{Caption: "None", Value: config.NoneTheme},
+	}
 
-    file, err := os.Open("internal/template/script/base.js")
-    if err != nil {
+	file, err := os.Open("internal/template/script/base.js")
+	if err != nil {
 		return shared.ErrorToast("Something went wrong!").Render(context.Background(), c.Response().Writer)
-    }
-    defer file.Close()
-    base, err := io.ReadAll(file)
-    if err != nil {
+	}
+	defer file.Close()
+	base, err := io.ReadAll(file)
+	if err != nil {
 		return shared.ErrorToast("Failed to read the base script file.").Render(context.Background(), c.Response().Writer)
-    }
-    basePreviewJs := "<script>" + string(base) + "</script>"
-    component := template.Configuration(
-        themeOptions,
-        basePreviewJs,
-        configuration,
+	}
+	basePreviewJs := "<script>" + string(base) + "</script>"
+	component := template.Configuration(
+		themeOptions,
+		basePreviewJs,
+		configuration,
 		id,
-    )
+	)
 	return component.Render(context.Background(), c.Response().Writer)
 
 }
@@ -107,15 +106,13 @@ func initializeStore() (data.Store, error) {
 		return data.Store{}, err
 	}
 	dbUrl := os.Getenv("DATABASE_URL")
-	authToken := os.Getenv("TURSO_AUTH_TOKEN")
-	if dbUrl == "" || authToken == "" {
-		return data.Store{}, fmt.Errorf("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
+	if dbUrl == "" {
+		return data.Store{}, fmt.Errorf("DATABASE_URL must be set in .env file")
 	}
-	return data.Store{DatabaseUrl: dbUrl + "?authToken=" + authToken, DriverName: "libsql"}, nil
+	return data.Store{DatabaseUrl: dbUrl, DriverName: "libsql"}, nil
 }
 
 func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
-	newVideo := data.NewVideo{Weight: 100, URL: c.FormValue(template.URL)}
 	newTheme := config.Theme(c.FormValue(template.THEME))
 
 	newBubbleEnabledStr := c.FormValue(template.BUBBLE_ENABLED)
@@ -138,8 +135,8 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 	}
 
 	return data.NewConfiguration{
-		VideoUrl: newVideo.URL,
-		Theme: newTheme,
+		VideoUrl: c.FormValue(template.URL),
+		Theme:    newTheme,
 		Bubble: config.Bubble{
 			Enabled:     newBubbleEnabled,
 			TextContent: c.FormValue(template.BUBBLE_TEXT),
@@ -168,7 +165,6 @@ func validateURL(videoUrl string) error {
 	if err != nil || parsedUrl.Scheme == "" || parsedUrl.Host == "" {
 		return fmt.Errorf("Video url is invalid!")
 	}
-
 
 	return nil
 }
@@ -232,6 +228,7 @@ func UpdateConfig(c echo.Context) error {
 }
 
 func IntroVideoCode(c echo.Context) error {
+
 	fmt.Println(
 		"url", c.FormValue(template.URL), "\n",
 		"bubbleEnabled", c.FormValue(template.BUBBLE_ENABLED), "\n",
@@ -278,7 +275,7 @@ func IntroVideoCode(c echo.Context) error {
 	ctaEnabledRaw := c.FormValue(template.CTA_ENABLED)
 	if ctaEnabledRaw == "on" || ctaEnabledRaw == "true" {
 		ctaEnabled = true
-	} else if ctaEnabledRaw == "off" ||  ctaEnabledRaw == "" {
+	} else if ctaEnabledRaw == "off" || ctaEnabledRaw == "" {
 		ctaEnabled = false
 	}
 
@@ -325,4 +322,3 @@ func IntroVideoCode(c echo.Context) error {
 	component := template.IntroVideoPreview(js, css, previewScript, previewStyle)
 	return component.Render(context.Background(), c.Response().Writer)
 }
-
