@@ -89,12 +89,18 @@ func GetConfiguration(c echo.Context) error {
 	if err != nil {
 		return shared.ErrorToast("Failed to read the base script file.").Render(context.Background(), c.Response().Writer)
 	}
-	basePreviewJs := "<script>" + string(base) + "</script>"
+	basePreviewJS := "<script>" + string(base) + "</script>"
+	videoFormProps := template.VideoFormProps{
+		ThemeOptions:  themeOptions,
+		BasePreviewJS: basePreviewJS,
+		FormValues:    configuration,
+		Ulid:          id,
+	}
+	videoPreviewProps := template.VideoPreviewProps{}
+
 	component := template.Configuration(
-		themeOptions,
-		basePreviewJs,
-		configuration,
-		id,
+		videoFormProps,
+		videoPreviewProps,
 	)
 	return component.Render(context.Background(), c.Response().Writer)
 }
@@ -226,14 +232,7 @@ func UpdateConfig(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-type previewCode struct {
-	js            string
-	css           string
-	previewScript string
-	previewStyle  string
-}
-
-func createPreviewCode(videoUrl string, theme config.Theme, bubble config.Bubble, cta config.Cta) (previewCode, error) {
+func createVideoPreviewProps(videoUrl string, theme config.Theme, bubble config.Bubble, cta config.Cta) (template.VideoPreviewProps, error) {
 
 	processableFileProps := internal.ProcessableFileProps{
 		URL:    videoUrl,
@@ -250,18 +249,18 @@ func createPreviewCode(videoUrl string, theme config.Theme, bubble config.Bubble
 
 	js, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
 	if err != nil {
-		return previewCode{}, err
+		return template.VideoPreviewProps{}, err
 	}
 
 	css, err := internal.Stylesheet{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
 	if err != nil {
-		return previewCode{}, err
+		return template.VideoPreviewProps{}, err
 	}
-	return previewCode{
-		js:            js,
-		css:           css,
-		previewScript: previewScript,
-		previewStyle:  previewStyle,
+	return template.VideoPreviewProps{
+		JS:            js,
+		CSS:           css,
+		PreviewScript: previewScript,
+		PreviewStyle:  previewStyle,
 	}, nil
 }
 
@@ -278,30 +277,11 @@ func IntroVideoCode(c echo.Context) error {
 		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
-	processableFileProps := internal.ProcessableFileProps{
-		URL:    configuration.VideoUrl,
-		Theme:  configuration.Theme,
-		Bubble: configuration.Bubble,
-		Cta:    configuration.Cta,
-	}
-
-	previewScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})
-	previewScript = "<script>" + previewScript + "</script>"
-
-	previewStyle, err := internal.Stylesheet{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})
-	previewStyle = "<style>" + previewStyle + "</style>"
-
-	js, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
+	videoPreviewProps, err := createVideoPreviewProps(configuration.VideoUrl, configuration.Theme, configuration.Bubble, configuration.Cta)
 	if err != nil {
-		fmt.Println(err)
-		return shared.ErrorToast("An error occurred while generating the script. Please try again later.").Render(context.Background(), c.Response().Writer)
+		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
-	css, err := internal.Stylesheet{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
-	if err != nil {
-		fmt.Println(err)
-		return shared.ErrorToast("An error occurred while generating the stylesheet. Please try again later.").Render(context.Background(), c.Response().Writer)
-	}
-	component := template.IntroVideoPreview(js, css, previewScript, previewStyle)
+	component := template.IntroVideoPreview(videoPreviewProps)
 	return component.Render(context.Background(), c.Response().Writer)
 }
