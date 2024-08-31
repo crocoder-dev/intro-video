@@ -97,7 +97,6 @@ func GetConfiguration(c echo.Context) error {
 		id,
 	)
 	return component.Render(context.Background(), c.Response().Writer)
-
 }
 
 func initializeStore() (data.Store, error) {
@@ -227,79 +226,63 @@ func UpdateConfig(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+type previewCode struct {
+	js            string
+	css           string
+	previewScript string
+	previewStyle  string
+}
+
+func createPreviewCode(videoUrl string, theme config.Theme, bubble config.Bubble, cta config.Cta) (previewCode, error) {
+
+	processableFileProps := internal.ProcessableFileProps{
+		URL:    videoUrl,
+		Theme:  theme,
+		Bubble: bubble,
+		Cta:    cta,
+	}
+
+	previewScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})
+	previewScript = "<script>" + previewScript + "</script>"
+
+	previewStyle, err := internal.Stylesheet{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})
+	previewStyle = "<style>" + previewStyle + "</style>"
+
+	js, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
+	if err != nil {
+		return previewCode{}, err
+	}
+
+	css, err := internal.Stylesheet{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
+	if err != nil {
+		return previewCode{}, err
+	}
+	return previewCode{
+		js:            js,
+		css:           css,
+		previewScript: previewScript,
+		previewStyle:  previewStyle,
+	}, nil
+}
+
 func IntroVideoCode(c echo.Context) error {
 
-	fmt.Println(
-		"url", c.FormValue(template.URL), "\n",
-		"bubbleEnabled", c.FormValue(template.BUBBLE_ENABLED), "\n",
-		"bubbleText", c.FormValue(template.BUBBLE_TEXT), "\n",
-		"theme", c.FormValue(template.THEME), "\n",
-		"ctaEnabled", c.FormValue(template.CTA_ENABLED), "\n",
-		"ctaText", c.FormValue(template.CTA_TEXT),
-	)
+	configuration, err := parseFormValues(c)
 
-	url := c.FormValue(template.URL)
-
-	if url == "" {
-		url = template.DEFAULT_URL
-	}
-
-	theme, err := config.NewTheme(c.FormValue(template.THEME))
 	if err != nil {
-		fmt.Println(err)
-		return shared.ErrorToast("There was an issue generating the theme. Please check the theme value and try again.").Render(context.Background(), c.Response().Writer)
+		return shared.ErrorToast("Something went wrong!").Render(context.Background(), c.Response().Writer)
 	}
 
-	bubbleEnabledRaw := c.FormValue(template.BUBBLE_ENABLED)
-
-	var bubbleEnabled bool
-
-	if bubbleEnabledRaw == "" || bubbleEnabledRaw == "off" {
-		bubbleEnabled = false
-	} else if bubbleEnabledRaw == "on" || bubbleEnabledRaw == "true" {
-		bubbleEnabled = true
-	}
-
-	var bubbleTextContent string
-
-	if bubbleEnabled {
-		if c.FormValue(template.BUBBLE_TEXT) != "" {
-			bubbleTextContent = c.FormValue(template.BUBBLE_TEXT)
-		} else {
-			bubbleTextContent = template.DEFAULT_BUBBLE_TEXT
-		}
-	}
-
-	var ctaEnabled bool
-
-	ctaEnabledRaw := c.FormValue(template.CTA_ENABLED)
-	if ctaEnabledRaw == "on" || ctaEnabledRaw == "true" {
-		ctaEnabled = true
-	} else if ctaEnabledRaw == "off" || ctaEnabledRaw == "" {
-		ctaEnabled = false
-	}
-
-	var ctaTextContent string
-
-	if ctaEnabled {
-		if c.FormValue(template.CTA_TEXT) != "" {
-			ctaTextContent = c.FormValue(template.CTA_TEXT)
-		} else {
-			ctaTextContent = template.DEFAULT_CTA_TEXT
-		}
+	err = validateConfiguration(configuration)
+	if err != nil {
+		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
 	processableFileProps := internal.ProcessableFileProps{
-		URL:   url,
-		Theme: theme,
-		Bubble: config.Bubble{
-			Enabled:     bubbleEnabled,
-			TextContent: bubbleTextContent,
-		},
-		Cta: config.Cta{
-			Enabled:     ctaEnabled,
-			TextContent: ctaTextContent,
-		},
+		URL:    configuration.VideoUrl,
+		Theme:  configuration.Theme,
+		Bubble: configuration.Bubble,
+		Cta:    configuration.Cta,
 	}
 
 	previewScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})

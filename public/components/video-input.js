@@ -120,7 +120,8 @@ class VideoInput extends LitElement {
     name: { type: String },
     state: { type: String },
     value: { type: String, reflect: true },
-    dirty: { type: Boolean }
+    dirty: { type: Boolean },
+    placeholder: { type: String },
   }
 
   constructor() {
@@ -189,7 +190,7 @@ class VideoInput extends LitElement {
           name="${this.name}"
           type="url"
           pattern="https://.*"
-          placeholder="https://example.com"
+          placeholder=${this.placeholder}
           class="video-input"
           .value="${this.value}"
           required
