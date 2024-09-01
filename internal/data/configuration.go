@@ -2,8 +2,8 @@ package data
 
 import (
 	"database/sql"
-	"os"
 	"fmt"
+	"os"
 
 	"github.com/crocoder-dev/intro-video/internal/config"
 	"github.com/joho/godotenv"
@@ -11,37 +11,11 @@ import (
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
-type Instance struct {
-	Id             int32
-	ExternalId     []byte
-	Videos         map[int32]Video
-	Configurations map[int32]Configuration
-}
-
-type NewVideo struct {
-	Weight int32
-	URL    string
-}
-
-type Video struct {
-	Id              int32
-	Weight          int32
-	ConfigurationId int32
-	URL             string
-}
-
-type NewConfiguration struct {
-	VideoUrl string
-	Theme  config.Theme
-	Bubble config.Bubble
-	Cta    config.Cta
-}
-
 type Configuration struct {
-	Id     []byte
-	Theme  config.Theme
-	Bubble config.Bubble
-	Cta    config.Cta
+	Id       []byte
+	Theme    config.Theme
+	Bubble   config.Bubble
+	Cta      config.Cta
 	VideoUrl string
 }
 
@@ -61,7 +35,7 @@ func NewStore() (Store, error) {
 
 }
 
-func (s *Store) LoadConfig(id []byte) (Configuration, error) {
+func (s *Store) LoadConfiguration(id []byte) (Configuration, error) {
 	db, err := sql.Open(s.DriverName, s.DatabaseUrl)
 	if err != nil {
 		return Configuration{}, err
@@ -113,7 +87,7 @@ func (s *Store) LoadConfig(id []byte) (Configuration, error) {
 	}
 
 	return Configuration{
-		Id: configId,
+		Id:    configId,
 		Theme: config.Theme(theme),
 		Bubble: config.Bubble{
 			Enabled:     bubbleEnabled,
@@ -127,7 +101,7 @@ func (s *Store) LoadConfig(id []byte) (Configuration, error) {
 	}, nil
 }
 
-func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configuration, error) {
+func (s *Store) CreateConfiguration(configuration Configuration) (Configuration, error) {
 	db, err := sql.Open(s.DriverName, s.DatabaseUrl)
 	if err != nil {
 		return Configuration{}, err
@@ -179,17 +153,17 @@ func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configurati
 	}
 
 	newConfiguration := Configuration{
-		Id:     configurationId,
-		Theme:  configuration.Theme,
-		Bubble:	config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
-		Cta:	config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
+		Id:       configurationId,
+		Theme:    configuration.Theme,
+		Bubble:   config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
+		Cta:      config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
 		VideoUrl: configuration.VideoUrl,
 	}
 
 	return newConfiguration, nil
 }
 
-func (s *Store) UpdateConfiguration(id []byte, configuration NewConfiguration) (Configuration, error) {
+func (s *Store) UpdateConfiguration(id []byte, configuration Configuration) (Configuration, error) {
 	db, err := sql.Open(s.DriverName, s.DatabaseUrl)
 	if err != nil {
 		return Configuration{}, err
@@ -232,13 +206,12 @@ func (s *Store) UpdateConfiguration(id []byte, configuration NewConfiguration) (
 	}
 
 	updatedConfiguration := Configuration{
-		Id:     id,
-		Theme:  configuration.Theme,
-		Bubble:	config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
-		Cta:	config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
+		Id:       id,
+		Theme:    configuration.Theme,
+		Bubble:   config.Bubble{Enabled: configuration.Bubble.Enabled, TextContent: configuration.Bubble.TextContent},
+		Cta:      config.Cta{Enabled: configuration.Cta.Enabled, TextContent: configuration.Cta.TextContent},
 		VideoUrl: configuration.VideoUrl,
 	}
 
 	return updatedConfiguration, nil
 }
-

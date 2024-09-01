@@ -3,8 +3,8 @@ package template
 import "github.com/crocoder-dev/intro-video/internal/config"
 
 type ThemeOption struct {
-	Caption string
-	Value config.Theme
+	Caption  string
+	Value    config.Theme
 	Selected bool
 }
 
@@ -24,7 +24,7 @@ script handleErrors() {
 	});
 }
 
-templ Configuration(themeOptions []ThemeOption, basePreviewJs string, formInputValues config.IntroVideoFormValues, id string) {
+templ Configuration(videoFormProps VideoFormProps, videoPreviewProps VideoPreviewProps) {
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
@@ -55,23 +55,18 @@ templ Configuration(themeOptions []ThemeOption, basePreviewJs string, formInputV
 				</header>
 				<div class="mx-auto w-full max-w-7xl grow xl:px-2">
 					<div class="w-full border-b border-gray-200">
-						@IntroVideoForm(themeOptions, basePreviewJs, formInputValues, id)
+						@IntroVideoForm(videoFormProps)
 					</div>
-					@IntroVideoPreview("", "", "", "")
+					@IntroVideoPreview(videoPreviewProps)
 				</div>
 			</div>
-
 			<div aria-live="assertive" class="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6">
-				<div id="messages" class="flex w-full flex-col items-center space-y-4 sm:items-end">
-				</div>
+				<div id="messages" class="flex w-full flex-col items-center space-y-4 sm:items-end"></div>
 			</div>
 			@handleErrors()
 			<div aria-live="assertive" class="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6">
-				<div id="messages" class="flex w-full flex-col items-center space-y-4 sm:items-end">
-
-				</div>
+				<div id="messages" class="flex w-full flex-col items-center space-y-4 sm:items-end"></div>
 			</div>
 		</body>
 	</html>
 }
-

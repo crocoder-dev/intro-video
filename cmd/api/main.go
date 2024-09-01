@@ -18,9 +18,10 @@ func main() {
 
 	e.GET("/demo/style.css", handler.Stylesheet)
 
-	e.GET("/v/:ulid", handler.Configuration)
+	e.GET("/v/:ulid", handler.GetConfiguration)
+	e.GET("/v/new", handler.GetConfiguration)
+
 	e.POST("/v/:ulid", handler.UpdateConfig)
-	e.GET("/v/new", handler.Configuration)
 	e.POST("/v/new", handler.IntroVideoCode)
 	e.POST("/v/config", handler.CreateConfig)
 
@@ -36,4 +37,3 @@ func main() {
 
 	e.Logger.Fatal(e.Start(":" + port))
 }
-

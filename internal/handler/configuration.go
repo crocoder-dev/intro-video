@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
-	"net/url"
 
 	"github.com/crocoder-dev/intro-video/internal"
 	"github.com/crocoder-dev/intro-video/internal/config"
@@ -21,84 +21,102 @@ import (
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
-func Configuration(c echo.Context) error {
-	defaultConfig := config.IntroVideoFormValues{
-        Url:        "",
-        Theme:      config.DefaultTheme,
-        CtaEnabled:        false,
-        BubbleEnabled:     false,
-        CtaText:    "",
-        BubbleText: "",
-    }
+func GetConfiguration(c echo.Context) error {
+	videoFormValues := config.IntroVideoFormValues{
+		Url:           template.PLACEHOLDER_URL,
+		Theme:         config.DefaultTheme,
+		CtaEnabled:    false,
+		BubbleEnabled: false,
+		CtaText:       template.PLACEHOLDER_CTA_TEXT,
+		BubbleText:    template.PLACEHOLDER_BUBBLE_TEXT,
+	}
+	configuration := data.Configuration{
+		VideoUrl: template.PLACEHOLDER_URL,
+		Theme:    config.DefaultTheme,
+		Bubble: config.Bubble{
+			Enabled:     false,
+			TextContent: template.PLACEHOLDER_BUBBLE_TEXT,
+		},
+		Cta: config.Cta{
+			Enabled:     false,
+			TextContent: template.PLACEHOLDER_BUBBLE_TEXT,
+		},
+	}
 
-    id := c.Param("ulid")
+	id := c.Param("ulid")
 
-    configuration := defaultConfig
+	if id != "" && id != "new" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			return err
+		}
 
-    if id != "" && id != "new" {
-        err := godotenv.Load(".env")
-        if err != nil {
-            return err
-        }
+		dbUrl := os.Getenv("DATABASE_URL")
+		if dbUrl == "" {
+			return fmt.Errorf("DATABASE_URL must be set in .env file")
+		}
 
-        dbUrl := os.Getenv("DATABASE_URL")
-        authToken := os.Getenv("TURSO_AUTH_TOKEN")
-        if dbUrl == "" || authToken == "" {
-            return fmt.Errorf("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
-        }
+		store := data.Store{DatabaseUrl: dbUrl, DriverName: "libsql"}
 
-        store := data.Store{DatabaseUrl: dbUrl + "?authToken=" + authToken, DriverName: "libsql"}
-
-        byteId, err := ulid.Parse(id)
-        if err != nil {
+		byteId, err := ulid.Parse(id)
+		if err != nil {
 			return shared.ErrorToast("Failed to parse ULID: %v. Using default configuration.").Render(context.Background(), c.Response().Writer)
-        } else {
-            loadedConfig, err := store.LoadConfig(byteId.Bytes())
-            if err != nil {
+		} else {
+			loadedConfig, err := store.LoadConfiguration(byteId.Bytes())
+			if err != nil {
 				return shared.ErrorToast("Failed to load configuration: %v. Using default configuration.").Render(context.Background(), c.Response().Writer)
-            } else {
-                configuration = config.IntroVideoFormValues{
-					Theme: loadedConfig.Theme,
-					CtaEnabled: loadedConfig.Cta.Enabled,
-					BubbleEnabled: loadedConfig.Bubble.Enabled,
-					BubbleText: loadedConfig.Bubble.TextContent,
-					CtaText: loadedConfig.Cta.TextContent,
-					Url: loadedConfig.VideoUrl,
-				}
-            }
-        }
-    }
+			}
 
-    themeOptions := []template.ThemeOption{
-        {Caption: "Default Theme", Value: config.DefaultTheme},
-        {Caption: "Shadcn Theme - Light", Value: config.ShadcnThemeLight},
-        {Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
-        {Caption: "MaterialUi Theme - Light", Value: config.MaterialUiThemeLight},
-        {Caption: "MaterialUi Theme - Dark", Value: config.MaterialUiThemeDark},
-        {Caption: "Tailwind Theme - Dark", Value: config.TailwindThemeDark},
-        {Caption: "Tailwind Theme - Light", Value: config.TailwindThemeLight},
-        {Caption: "CroCoder Theme", Value: config.Crocoder, Selected: true},
-        {Caption: "None", Value: config.NoneTheme},
-    }
+			configuration = loadedConfig
 
-    file, err := os.Open("internal/template/script/base.js")
-    if err != nil {
+			videoFormValues = config.IntroVideoFormValues{
+				Theme:         loadedConfig.Theme,
+				CtaEnabled:    loadedConfig.Cta.Enabled,
+				BubbleEnabled: loadedConfig.Bubble.Enabled,
+				BubbleText:    loadedConfig.Bubble.TextContent,
+				CtaText:       loadedConfig.Cta.TextContent,
+				Url:           loadedConfig.VideoUrl,
+			}
+		}
+	}
+
+	themeOptions := []template.ThemeOption{
+		{Caption: "Default Theme", Value: config.DefaultTheme},
+		{Caption: "Shadcn Theme - Light", Value: config.ShadcnThemeLight},
+		{Caption: "Shadcn Theme - Dark", Value: config.ShadcnThemeDark},
+		{Caption: "MaterialUi Theme - Light", Value: config.MaterialUiThemeLight},
+		{Caption: "MaterialUi Theme - Dark", Value: config.MaterialUiThemeDark},
+		{Caption: "Tailwind Theme - Dark", Value: config.TailwindThemeDark},
+		{Caption: "Tailwind Theme - Light", Value: config.TailwindThemeLight},
+		{Caption: "CroCoder Theme", Value: config.Crocoder, Selected: true},
+		{Caption: "None", Value: config.NoneTheme},
+	}
+
+	file, err := os.Open("internal/template/script/base.js")
+	if err != nil {
 		return shared.ErrorToast("Something went wrong!").Render(context.Background(), c.Response().Writer)
-    }
-    defer file.Close()
-    base, err := io.ReadAll(file)
-    if err != nil {
+	}
+	defer file.Close()
+	base, err := io.ReadAll(file)
+	if err != nil {
 		return shared.ErrorToast("Failed to read the base script file.").Render(context.Background(), c.Response().Writer)
-    }
-    basePreviewJs := "<script>" + string(base) + "</script>"
-    component := template.Configuration(
-        themeOptions,
-        basePreviewJs,
-        configuration,
-		id,
-    )
-	return component.Render(context.Background(), c.Response().Writer)
+	}
+	basePreviewJS := "<script>" + string(base) + "</script>"
+	videoFormProps := template.VideoFormProps{
+		ThemeOptions:  themeOptions,
+		BasePreviewJS: basePreviewJS,
+		FormValues:    videoFormValues,
+		Ulid:          id,
+	}
 
+	videoPreviewProps, err := createVideoPreviewProps(configuration)
+
+	component := template.Configuration(
+		videoFormProps,
+		videoPreviewProps,
+	)
+
+	return component.Render(context.Background(), c.Response().Writer)
 }
 
 func initializeStore() (data.Store, error) {
@@ -107,15 +125,13 @@ func initializeStore() (data.Store, error) {
 		return data.Store{}, err
 	}
 	dbUrl := os.Getenv("DATABASE_URL")
-	authToken := os.Getenv("TURSO_AUTH_TOKEN")
-	if dbUrl == "" || authToken == "" {
-		return data.Store{}, fmt.Errorf("DATABASE_URL and TURSO_AUTH_TOKEN must be set in .env file")
+	if dbUrl == "" {
+		return data.Store{}, fmt.Errorf("DATABASE_URL must be set in .env file")
 	}
-	return data.Store{DatabaseUrl: dbUrl + "?authToken=" + authToken, DriverName: "libsql"}, nil
+	return data.Store{DatabaseUrl: dbUrl, DriverName: "libsql"}, nil
 }
 
-func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
-	newVideo := data.NewVideo{Weight: 100, URL: c.FormValue(template.URL)}
+func parseFormValues(c echo.Context) (data.Configuration, error) {
 	newTheme := config.Theme(c.FormValue(template.THEME))
 
 	newBubbleEnabledStr := c.FormValue(template.BUBBLE_ENABLED)
@@ -124,7 +140,7 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 	}
 	newBubbleEnabled, err := strconv.ParseBool(newBubbleEnabledStr)
 	if err != nil {
-		return data.NewConfiguration{}, err
+		return data.Configuration{}, err
 	}
 
 	newCtaEnabledStr := c.FormValue(template.CTA_ENABLED)
@@ -134,12 +150,12 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 
 	newCtaEnabled, err := strconv.ParseBool(newCtaEnabledStr)
 	if err != nil {
-		return data.NewConfiguration{}, err
+		return data.Configuration{}, err
 	}
 
-	return data.NewConfiguration{
-		VideoUrl: newVideo.URL,
-		Theme: newTheme,
+	return data.Configuration{
+		VideoUrl: c.FormValue(template.URL),
+		Theme:    newTheme,
 		Bubble: config.Bubble{
 			Enabled:     newBubbleEnabled,
 			TextContent: c.FormValue(template.BUBBLE_TEXT),
@@ -151,7 +167,7 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 	}, nil
 }
 
-func validateConfiguration(config data.NewConfiguration) error {
+func validateConfiguration(config data.Configuration) error {
 	if err := validateURL(config.VideoUrl); err != nil {
 		return err
 	}
@@ -168,7 +184,6 @@ func validateURL(videoUrl string) error {
 	if err != nil || parsedUrl.Scheme == "" || parsedUrl.Host == "" {
 		return fmt.Errorf("Video url is invalid!")
 	}
-
 
 	return nil
 }
@@ -231,78 +246,13 @@ func UpdateConfig(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func IntroVideoCode(c echo.Context) error {
-	fmt.Println(
-		"url", c.FormValue(template.URL), "\n",
-		"bubbleEnabled", c.FormValue(template.BUBBLE_ENABLED), "\n",
-		"bubbleText", c.FormValue(template.BUBBLE_TEXT), "\n",
-		"theme", c.FormValue(template.THEME), "\n",
-		"ctaEnabled", c.FormValue(template.CTA_ENABLED), "\n",
-		"ctaText", c.FormValue(template.CTA_TEXT),
-	)
-
-	url := c.FormValue(template.URL)
-
-	if url == "" {
-		url = template.DEFAULT_URL
-	}
-
-	theme, err := config.NewTheme(c.FormValue(template.THEME))
-	if err != nil {
-		fmt.Println(err)
-		return shared.ErrorToast("There was an issue generating the theme. Please check the theme value and try again.").Render(context.Background(), c.Response().Writer)
-	}
-
-	bubbleEnabledRaw := c.FormValue(template.BUBBLE_ENABLED)
-
-	var bubbleEnabled bool
-
-	if bubbleEnabledRaw == "" || bubbleEnabledRaw == "off" {
-		bubbleEnabled = false
-	} else if bubbleEnabledRaw == "on" || bubbleEnabledRaw == "true" {
-		bubbleEnabled = true
-	}
-
-	var bubbleTextContent string
-
-	if bubbleEnabled {
-		if c.FormValue(template.BUBBLE_TEXT) != "" {
-			bubbleTextContent = c.FormValue(template.BUBBLE_TEXT)
-		} else {
-			bubbleTextContent = template.DEFAULT_BUBBLE_TEXT
-		}
-	}
-
-	var ctaEnabled bool
-
-	ctaEnabledRaw := c.FormValue(template.CTA_ENABLED)
-	if ctaEnabledRaw == "on" || ctaEnabledRaw == "true" {
-		ctaEnabled = true
-	} else if ctaEnabledRaw == "off" ||  ctaEnabledRaw == "" {
-		ctaEnabled = false
-	}
-
-	var ctaTextContent string
-
-	if ctaEnabled {
-		if c.FormValue(template.CTA_TEXT) != "" {
-			ctaTextContent = c.FormValue(template.CTA_TEXT)
-		} else {
-			ctaTextContent = template.DEFAULT_CTA_TEXT
-		}
-	}
+func createVideoPreviewProps(config data.Configuration) (template.VideoPreviewProps, error) {
 
 	processableFileProps := internal.ProcessableFileProps{
-		URL:   url,
-		Theme: theme,
-		Bubble: config.Bubble{
-			Enabled:     bubbleEnabled,
-			TextContent: bubbleTextContent,
-		},
-		Cta: config.Cta{
-			Enabled:     ctaEnabled,
-			TextContent: ctaTextContent,
-		},
+		URL:    config.VideoUrl,
+		Theme:  config.Theme,
+		Bubble: config.Bubble,
+		Cta:    config.Cta,
 	}
 
 	previewScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})
@@ -313,16 +263,39 @@ func IntroVideoCode(c echo.Context) error {
 
 	js, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
 	if err != nil {
-		fmt.Println(err)
-		return shared.ErrorToast("An error occurred while generating the script. Please try again later.").Render(context.Background(), c.Response().Writer)
+		return template.VideoPreviewProps{}, err
 	}
 
 	css, err := internal.Stylesheet{}.Process(processableFileProps, internal.ProcessableFileOpts{Minify: true})
 	if err != nil {
-		fmt.Println(err)
-		return shared.ErrorToast("An error occurred while generating the stylesheet. Please try again later.").Render(context.Background(), c.Response().Writer)
+		return template.VideoPreviewProps{}, err
 	}
-	component := template.IntroVideoPreview(js, css, previewScript, previewStyle)
-	return component.Render(context.Background(), c.Response().Writer)
+	return template.VideoPreviewProps{
+		JS:            js,
+		CSS:           css,
+		PreviewScript: previewScript,
+		PreviewStyle:  previewStyle,
+	}, nil
 }
 
+func IntroVideoCode(c echo.Context) error {
+
+	configuration, err := parseFormValues(c)
+
+	if err != nil {
+		return shared.ErrorToast("Something went wrong!").Render(context.Background(), c.Response().Writer)
+	}
+
+	err = validateConfiguration(configuration)
+	if err != nil {
+		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
+	}
+
+	videoPreviewProps, err := createVideoPreviewProps(configuration)
+	if err != nil {
+		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
+	}
+
+	component := template.IntroVideoPreview(videoPreviewProps)
+	return component.Render(context.Background(), c.Response().Writer)
+}
