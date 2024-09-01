@@ -11,13 +11,6 @@ import (
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
-type NewConfiguration struct {
-	VideoUrl string
-	Theme    config.Theme
-	Bubble   config.Bubble
-	Cta      config.Cta
-}
-
 type Configuration struct {
 	Id       []byte
 	Theme    config.Theme
@@ -108,7 +101,7 @@ func (s *Store) LoadConfiguration(id []byte) (Configuration, error) {
 	}, nil
 }
 
-func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configuration, error) {
+func (s *Store) CreateConfiguration(configuration Configuration) (Configuration, error) {
 	db, err := sql.Open(s.DriverName, s.DatabaseUrl)
 	if err != nil {
 		return Configuration{}, err
@@ -170,7 +163,7 @@ func (s *Store) CreateConfiguration(configuration NewConfiguration) (Configurati
 	return newConfiguration, nil
 }
 
-func (s *Store) UpdateConfiguration(id []byte, configuration NewConfiguration) (Configuration, error) {
+func (s *Store) UpdateConfiguration(id []byte, configuration Configuration) (Configuration, error) {
 	db, err := sql.Open(s.DriverName, s.DatabaseUrl)
 	if err != nil {
 		return Configuration{}, err

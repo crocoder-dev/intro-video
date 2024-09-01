@@ -108,7 +108,7 @@ func TestCreateConfiguration(t *testing.T) {
 
 	store := data.Store{DatabaseUrl: dbName, DriverName: "sqlite3"}
 
-	newConfiguration := data.NewConfiguration{
+	newConfiguration := data.Configuration{
 		Theme: config.DefaultTheme,
 		Bubble: config.Bubble{
 			Enabled:     true,
@@ -196,7 +196,7 @@ func TestUpdateConfiguration(t *testing.T) {
 
 	store := data.Store{DatabaseUrl: dbName, DriverName: "sqlite3"}
 
-	newConfiguration := data.NewConfiguration{
+	newConfiguration := data.Configuration{
 		Theme: config.DefaultTheme,
 		Bubble: config.Bubble{
 			Enabled:     true,
@@ -214,7 +214,7 @@ func TestUpdateConfiguration(t *testing.T) {
 		t.Fatalf("failed to create instance: %v", err)
 	}
 
-	updatedConfiguration := data.NewConfiguration{
+	updatedConfiguration := data.Configuration{
 		Theme: config.ShadcnThemeDark,
 		Bubble: config.Bubble{
 			Enabled:     false,

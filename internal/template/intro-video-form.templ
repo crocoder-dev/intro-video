@@ -15,9 +15,9 @@ const (
 )
 
 const (
-	DEFAULT_URL         = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-	DEFAULT_CTA_TEXT    = "Call to Action"
-	DEFAULT_BUBBLE_TEXT = "Click on the video to play it!"
+	PLACEHOLDER_URL         = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+	PLACEHOLDER_CTA_TEXT    = "Call to Action"
+	PLACEHOLDER_BUBBLE_TEXT = "Click on the video to play it!"
 )
 
 type VideoFormProps struct {
@@ -50,9 +50,16 @@ templ Toggle(id string, name string, text string, enabled bool) {
 
 templ IntroVideoForm(props VideoFormProps) {
 	@templ.Raw(props.BasePreviewJS)
-	<form class="max-w-[700px] m-auto p-6" id="introVideoForm" hx-post="/v/new" hx-trigger="change throttle:300ms" hx-swap="innerHTML" hx-target="#intro-video-code">
+	<form
+		class="max-w-[700px] m-auto p-6"
+		id="introVideoForm"
+		hx-post="/v/new"
+		hx-trigger="change throttle:300ms"
+		hx-swap="innerHTML"
+		hx-target="#intro-video-code"
+	>
 		<label for={ URL } class="block text-sm font-medium leading-6 text-gray-900">Video URL</label>
-		<video-input id={ URL } name={ URL } placeholder={ DEFAULT_URL } value={ props.FormValues.Url }></video-input>
+		<video-input id={ URL } name={ URL } placeholder={ PLACEHOLDER_URL } value={ props.FormValues.Url }></video-input>
 		<label for={ THEME } class="mt-2 block text-sm font-medium leading-6 text-gray-900">Theme</label>
 		<select
 			id={ THEME }
@@ -76,7 +83,7 @@ templ IntroVideoForm(props VideoFormProps) {
 					<input
 						type="text"
 						value={ props.FormValues.BubbleText }
-						placeholder={ DEFAULT_BUBBLE_TEXT }
+						placeholder={ PLACEHOLDER_BUBBLE_TEXT }
 						name={ BUBBLE_TEXT }
 						id={ BUBBLE_TEXT }
 						class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
@@ -92,7 +99,7 @@ templ IntroVideoForm(props VideoFormProps) {
 					<input
 						type="text"
 						value={ props.FormValues.CtaText }
-						placeholder={ DEFAULT_CTA_TEXT }
+						placeholder={ PLACEHOLDER_CTA_TEXT }
 						name={ CTA_TEXT }
 						id={ CTA_TEXT }
 						class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"

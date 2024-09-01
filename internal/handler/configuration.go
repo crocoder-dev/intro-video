@@ -22,18 +22,28 @@ import (
 )
 
 func GetConfiguration(c echo.Context) error {
-	defaultConfig := config.IntroVideoFormValues{
-		Url:           "",
+	videoFormValues := config.IntroVideoFormValues{
+		Url:           template.PLACEHOLDER_URL,
 		Theme:         config.DefaultTheme,
 		CtaEnabled:    false,
 		BubbleEnabled: false,
-		CtaText:       "",
-		BubbleText:    "",
+		CtaText:       template.PLACEHOLDER_CTA_TEXT,
+		BubbleText:    template.PLACEHOLDER_BUBBLE_TEXT,
+	}
+	configuration := data.Configuration{
+		VideoUrl: template.PLACEHOLDER_URL,
+		Theme:    config.DefaultTheme,
+		Bubble: config.Bubble{
+			Enabled:     false,
+			TextContent: template.PLACEHOLDER_BUBBLE_TEXT,
+		},
+		Cta: config.Cta{
+			Enabled:     false,
+			TextContent: template.PLACEHOLDER_BUBBLE_TEXT,
+		},
 	}
 
 	id := c.Param("ulid")
-
-	configuration := defaultConfig
 
 	if id != "" && id != "new" {
 		err := godotenv.Load(".env")
@@ -55,15 +65,17 @@ func GetConfiguration(c echo.Context) error {
 			loadedConfig, err := store.LoadConfiguration(byteId.Bytes())
 			if err != nil {
 				return shared.ErrorToast("Failed to load configuration: %v. Using default configuration.").Render(context.Background(), c.Response().Writer)
-			} else {
-				configuration = config.IntroVideoFormValues{
-					Theme:         loadedConfig.Theme,
-					CtaEnabled:    loadedConfig.Cta.Enabled,
-					BubbleEnabled: loadedConfig.Bubble.Enabled,
-					BubbleText:    loadedConfig.Bubble.TextContent,
-					CtaText:       loadedConfig.Cta.TextContent,
-					Url:           loadedConfig.VideoUrl,
-				}
+			}
+
+			configuration = loadedConfig
+
+			videoFormValues = config.IntroVideoFormValues{
+				Theme:         loadedConfig.Theme,
+				CtaEnabled:    loadedConfig.Cta.Enabled,
+				BubbleEnabled: loadedConfig.Bubble.Enabled,
+				BubbleText:    loadedConfig.Bubble.TextContent,
+				CtaText:       loadedConfig.Cta.TextContent,
+				Url:           loadedConfig.VideoUrl,
 			}
 		}
 	}
@@ -93,15 +105,17 @@ func GetConfiguration(c echo.Context) error {
 	videoFormProps := template.VideoFormProps{
 		ThemeOptions:  themeOptions,
 		BasePreviewJS: basePreviewJS,
-		FormValues:    configuration,
+		FormValues:    videoFormValues,
 		Ulid:          id,
 	}
-	videoPreviewProps := template.VideoPreviewProps{}
+
+	videoPreviewProps, err := createVideoPreviewProps(configuration)
 
 	component := template.Configuration(
 		videoFormProps,
 		videoPreviewProps,
 	)
+
 	return component.Render(context.Background(), c.Response().Writer)
 }
 
@@ -117,7 +131,7 @@ func initializeStore() (data.Store, error) {
 	return data.Store{DatabaseUrl: dbUrl, DriverName: "libsql"}, nil
 }
 
-func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
+func parseFormValues(c echo.Context) (data.Configuration, error) {
 	newTheme := config.Theme(c.FormValue(template.THEME))
 
 	newBubbleEnabledStr := c.FormValue(template.BUBBLE_ENABLED)
@@ -126,7 +140,7 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 	}
 	newBubbleEnabled, err := strconv.ParseBool(newBubbleEnabledStr)
 	if err != nil {
-		return data.NewConfiguration{}, err
+		return data.Configuration{}, err
 	}
 
 	newCtaEnabledStr := c.FormValue(template.CTA_ENABLED)
@@ -136,10 +150,10 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 
 	newCtaEnabled, err := strconv.ParseBool(newCtaEnabledStr)
 	if err != nil {
-		return data.NewConfiguration{}, err
+		return data.Configuration{}, err
 	}
 
-	return data.NewConfiguration{
+	return data.Configuration{
 		VideoUrl: c.FormValue(template.URL),
 		Theme:    newTheme,
 		Bubble: config.Bubble{
@@ -153,7 +167,7 @@ func parseFormValues(c echo.Context) (data.NewConfiguration, error) {
 	}, nil
 }
 
-func validateConfiguration(config data.NewConfiguration) error {
+func validateConfiguration(config data.Configuration) error {
 	if err := validateURL(config.VideoUrl); err != nil {
 		return err
 	}
@@ -232,13 +246,13 @@ func UpdateConfig(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func createVideoPreviewProps(videoUrl string, theme config.Theme, bubble config.Bubble, cta config.Cta) (template.VideoPreviewProps, error) {
+func createVideoPreviewProps(config data.Configuration) (template.VideoPreviewProps, error) {
 
 	processableFileProps := internal.ProcessableFileProps{
-		URL:    videoUrl,
-		Theme:  theme,
-		Bubble: bubble,
-		Cta:    cta,
+		URL:    config.VideoUrl,
+		Theme:  config.Theme,
+		Bubble: config.Bubble,
+		Cta:    config.Cta,
 	}
 
 	previewScript, err := internal.Script{}.Process(processableFileProps, internal.ProcessableFileOpts{Preview: true})
@@ -277,7 +291,7 @@ func IntroVideoCode(c echo.Context) error {
 		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
 
-	videoPreviewProps, err := createVideoPreviewProps(configuration.VideoUrl, configuration.Theme, configuration.Bubble, configuration.Cta)
+	videoPreviewProps, err := createVideoPreviewProps(configuration)
 	if err != nil {
 		return shared.ErrorToast(err.Error()).Render(context.Background(), c.Response().Writer)
 	}
