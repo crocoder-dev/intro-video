@@ -6,7 +6,7 @@ require (
 	github.com/a-h/templ v0.2.747
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.12.0
-	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/mattn/go-sqlite3 v1.14.23
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/tdewolff/minify/v2 v2.20.37
 	github.com/tursodatabase/libsql-client-go v0.0.0-20240416075003-747366ff79c4
